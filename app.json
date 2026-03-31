@@ -1,0 +1,59 @@
+{
+  "expo": {
+    "name": "Avomeal",
+    "slug": "avomeal-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/mobile-app-icon.png",
+    "scheme": "avomeal",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "extra": {
+      "eas": {
+        "projectId": "f33cf455-e56c-46a2-a54f-50caa3b19e11"
+      }
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.vnvevents.avomeal",
+      "buildNumber": "1.0.0",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": [
+          "remote-notification"
+        ]
+      }
+    },
+    "android": {
+      "package": "com.vnvevents.avomeal",
+      "versionCode": 10000,
+      "googleServicesFile": "./google-services.json",
+      "edgeToEdgeEnabled": true,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/mobile-app-icon.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
+        }
+      ],
+      "expo-web-browser",
+      "expo-notifications"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "owner": "vnv_developers"
+  }
+}

@@ -1,0 +1,1247 @@
+<div id="vnvLuxuryWizard">
+
+  <style>
+    #vnvLuxuryWizard{
+      --gold:#C6A75E;
+      --gold2:#E6C67A;
+      --black:#0f0f10;
+      --text:#141416;
+      --muted:#5f6470;
+      --bg:#ffffff;
+      --soft:#f6f6f7;
+      --border:#e7e7ea;
+      --shadow:0 22px 60px rgba(0,0,0,.12);
+      --shadow2:0 14px 40px rgba(0,0,0,.10);
+      --radius:20px;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+    #vnvLuxuryWizard, #vnvLuxuryWizard *{ box-sizing:border-box; font-family:var(--font); }
+    #vnvLuxuryWizard a{ color:inherit; text-decoration:none; }
+
+    /* ===== Force this widget to take real space + push footer down ===== */
+    #vnvLuxuryWizard{
+      position: relative;
+      z-index: 2;
+      display: block;
+      width: 100%;
+      clear: both;
+      margin: 18px 0 calc(110px + env(safe-area-inset-bottom)); /* prevents floating widgets from covering content */
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    #vnvLuxuryWizard .wrap{
+      background: var(--bg);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow2);
+      position:relative;
+      overflow:hidden; /* keep hero clean */
+    }
+
+    /* =========================
+       HERO — Bigger, more WOW,
+       video centered (no drifting)
+    ========================= */
+    #vnvLuxuryWizard .hero{
+      position:relative;
+      overflow:hidden;
+      background:#fff;
+      text-align:center;
+
+      /* Bigger coverage */
+      min-height: clamp(540px, 78vh, 880px);
+      display:flex;
+      align-items:center;
+
+      padding: clamp(54px, 7vw, 110px) 20px clamp(46px, 6vw, 92px);
+      isolation: isolate;
+    }
+
+    #vnvLuxuryWizard .heroVideo{ position:absolute; inset:0; z-index:0; overflow:hidden; }
+
+    /* Centered and stable iframe sizing */
+    #vnvLuxuryWizard .heroVideo iframe{
+      position:absolute;
+      top:50%; left:50%;
+
+      /* make it truly cover */
+      width: max(140vw, 140vh);
+      height: max(140vh, 140vw);
+
+      transform: translate(-50%, -50%);
+      pointer-events:none;
+      filter: contrast(1.08) saturate(1.10);
+    }
+
+    /* Less white wash, more contrast */
+    #vnvLuxuryWizard .heroOverlay{
+      position:absolute; inset:0; z-index:1;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.66), rgba(255,255,255,.74)),
+        radial-gradient(1200px 700px at 10% 0%, rgba(198,167,94,.28), transparent 55%),
+        radial-gradient(900px 600px at 90% 10%, rgba(198,167,94,.18), transparent 58%);
+    }
+
+    /* subtle vignette for WOW */
+    #vnvLuxuryWizard .heroOverlay::after{
+      content:"";
+      position:absolute; inset:-20px;
+      background: radial-gradient(900px 520px at 50% 25%, transparent 40%, rgba(15,15,16,.12) 100%);
+      pointer-events:none;
+    }
+
+    #vnvLuxuryWizard .heroInner{
+      max-width: 1120px;
+      margin:0 auto;
+      position:relative;
+      z-index:2;
+    }
+
+    #vnvLuxuryWizard .badgeRow{
+      display:flex; justify-content:center; gap:10px; flex-wrap:wrap;
+      margin-bottom: 16px;
+    }
+    #vnvLuxuryWizard .badge{
+      display:inline-flex; align-items:center; gap:10px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(198,167,94,.48);
+      background: rgba(255,255,255,.72);
+      color: var(--text);
+      font-weight: 950;
+      font-size: 12px;
+      letter-spacing: .2px;
+      box-shadow: 0 10px 26px rgba(0,0,0,.05);
+      backdrop-filter: blur(6px);
+    }
+    #vnvLuxuryWizard .dot{
+      width:8px; height:8px; border-radius:99px;
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      box-shadow: 0 0 0 7px rgba(198,167,94,.18);
+    }
+
+    /* More prominent headline (still elegant) */
+    #vnvLuxuryWizard h1{
+      margin: 0 auto 12px;
+      font-size: clamp(42px, 6.0vw, 78px);
+      line-height: 0.98;
+      letter-spacing: -1.9px;
+      font-weight: 980;
+      color: var(--black);
+      max-width: 18ch;
+      text-shadow: 0 10px 28px rgba(0,0,0,.08);
+    }
+    #vnvLuxuryWizard .sub{
+      margin: 0 auto 24px;
+      color: rgba(20,20,22,.78);
+      font-size: clamp(17px, 2.0vw, 22px);
+      line-height: 1.55;
+      max-width: 76ch;
+      font-weight: 750;
+    }
+
+    #vnvLuxuryWizard .ctaRow{
+      display:flex; justify-content:center; gap:12px; flex-wrap:wrap;
+      margin-top: 10px;
+    }
+
+    #vnvLuxuryWizard .btn{
+      appearance:none; border:none; cursor:pointer;
+      border-radius: 999px;
+      padding: 15px 24px;
+      font-weight: 980;
+      letter-spacing: .2px;
+      transition: transform .12s ease, box-shadow .12s ease, background .12s ease, color .12s ease, border-color .12s ease;
+      display:inline-flex; align-items:center; justify-content:center; gap:10px;
+      user-select:none;
+      min-height: 54px;
+      line-height: 1;
+      white-space: nowrap;
+    }
+    #vnvLuxuryWizard .btnBlack{
+      background: var(--black);
+      color: #fff;
+      box-shadow: 0 18px 38px rgba(0,0,0,.22);
+    }
+    #vnvLuxuryWizard .btnBlack:hover{
+      transform: translateY(-1px);
+      background: linear-gradient(135deg, var(--black), #1b1b1d);
+      box-shadow: 0 24px 52px rgba(0,0,0,.26);
+    }
+
+    #vnvLuxuryWizard .btnGold{
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      color: #1a1408;
+      box-shadow: 0 16px 34px rgba(198,167,94,.34);
+    }
+    #vnvLuxuryWizard .btnGold:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 22px 46px rgba(198,167,94,.40);
+    }
+
+    #vnvLuxuryWizard .fine{
+      margin-top: 16px;
+      color: rgba(20,20,22,.76);
+      font-size: 13px;
+      line-height: 1.55;
+      font-weight: 750;
+      background: rgba(255,255,255,.55);
+      border: 1px solid rgba(0,0,0,.07);
+      display:inline-block;
+      padding: 10px 14px;
+      border-radius: 14px;
+      box-shadow: 0 10px 26px rgba(0,0,0,.06);
+      backdrop-filter: blur(6px);
+    }
+
+    /* SECTION */
+    #vnvLuxuryWizard .section{
+      background: var(--soft);
+      padding: 54px 20px 86px;
+      border-top: 1px solid var(--border);
+    }
+    #vnvLuxuryWizard .container{ max-width: 1120px; margin:0 auto; }
+
+    #vnvLuxuryWizard .grid{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      margin-top: 18px;
+    }
+    @media (max-width: 980px){
+      #vnvLuxuryWizard .grid{ grid-template-columns: 1fr; }
+    }
+
+    #vnvLuxuryWizard .card{
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 30px 22px 22px;
+      box-shadow: var(--shadow2);
+      position:relative;
+      overflow:hidden;
+      transition: transform .14s ease, box-shadow .14s ease;
+    }
+    #vnvLuxuryWizard .card:hover{
+      transform: translateY(-3px);
+      box-shadow: var(--shadow);
+    }
+    #vnvLuxuryWizard .card::before{
+      content:"";
+      position:absolute; left:0; top:0; height:4px; width:100%;
+      background: linear-gradient(90deg, var(--gold), var(--gold2));
+    }
+
+    #vnvLuxuryWizard .icon{
+      width: 50px; height: 50px;
+      border-radius: 16px;
+      display:grid; place-items:center;
+      background: rgba(198,167,94,.10);
+      border: 1px solid rgba(198,167,94,.30);
+      margin-bottom: 12px;
+    }
+    #vnvLuxuryWizard .icon svg{ width: 22px; height: 22px; fill: none; stroke: var(--gold); stroke-width: 2; }
+
+    #vnvLuxuryWizard .card h3{
+      margin: 0 0 8px 0;
+      color: var(--black);
+      font-size: 23px;
+      letter-spacing: -.2px;
+      font-weight: 980;
+    }
+    #vnvLuxuryWizard .card p{
+      margin: 0 0 14px 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.65;
+      font-weight: 650;
+    }
+    #vnvLuxuryWizard .pills{ display:flex; flex-wrap:wrap; gap:8px; margin: 0 0 14px 0; }
+    #vnvLuxuryWizard .pill{
+      padding: 7px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      border: 1px solid rgba(198,167,94,.35);
+      background: rgba(198,167,94,.08);
+      color: #7a5a1f;
+      font-weight: 950;
+      letter-spacing: .1px;
+    }
+    #vnvLuxuryWizard .card .btn{ width:100%; }
+
+    /* MODAL */
+    #vnvLuxuryWizard .overlay{
+      position: fixed; inset: 0;
+      background: rgba(10,10,10,.56);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 18px;
+      z-index: 999999; /* above WhatsApp widgets */
+    }
+    #vnvLuxuryWizard .overlay.open{ display:flex; }
+
+    #vnvLuxuryWizard .modal{
+      width: min(980px, 100%);
+      background: #fff;
+      border-radius: var(--radius);
+      border: 1px solid rgba(0,0,0,.10);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+
+      max-height: calc(100vh - 36px);
+      display:flex;
+      flex-direction:column;
+    }
+
+    #vnvLuxuryWizard .mHeader{
+      padding: 16px 18px;
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
+      border-bottom: 1px solid var(--border);
+      background:
+        radial-gradient(900px 300px at 20% 0%, rgba(198,167,94,.18), transparent 60%),
+        #fff;
+    }
+    #vnvLuxuryWizard .mHeader b{
+      font-size: 15px;
+      letter-spacing: .2px;
+      font-weight: 980;
+      color: var(--black);
+    }
+    #vnvLuxuryWizard .close{
+      border: 1px solid rgba(0,0,0,.12);
+      background: #fff;
+      border-radius: 12px;
+      padding: 8px 11px;
+      cursor:pointer;
+      font-weight: 980;
+      color: var(--black);
+      min-height: 44px;
+      min-width: 44px;
+    }
+    #vnvLuxuryWizard .close:hover{ border-color: rgba(198,167,94,.45); }
+
+    #vnvLuxuryWizard .mBody{
+      padding: 18px;
+      overflow:auto;
+      -webkit-overflow-scrolling: touch;
+      max-height: calc(100vh - 160px);
+    }
+
+    #vnvLuxuryWizard .progressWrap{
+      display:flex; align-items:center; gap:12px;
+      margin-bottom: 14px;
+    }
+    #vnvLuxuryWizard .progress{
+      height: 9px; flex:1;
+      background: #f0f0f2;
+      border-radius: 999px;
+      overflow:hidden;
+      border: 1px solid var(--border);
+    }
+    #vnvLuxuryWizard .progress > i{
+      display:block; height:100%; width:0%;
+      background: linear-gradient(90deg, var(--gold), var(--gold2));
+      border-radius: 999px;
+      transition: width .16s ease;
+    }
+    #vnvLuxuryWizard .stepCount{
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 950;
+      white-space: nowrap;
+    }
+
+    /* Bigger, more readable wizard */
+    #vnvLuxuryWizard .stepTitle{
+      margin: 0 0 6px 0;
+      font-size: 26px;
+      font-weight: 990;
+      letter-spacing: -.5px;
+      color: var(--black);
+    }
+    #vnvLuxuryWizard .stepHint{
+      margin: 0 0 16px 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.6;
+      font-weight: 700;
+    }
+
+    #vnvLuxuryWizard .grid2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 820px){ #vnvLuxuryWizard .grid2{ grid-template-columns: 1fr; } }
+
+    #vnvLuxuryWizard .choice{
+      width:100%;
+      text-align:left;
+      padding: 22px 20px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: #fff;
+      cursor:pointer;
+      transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease, background .12s ease;
+      box-shadow: 0 10px 26px rgba(0,0,0,.05);
+      min-height: 92px;
+    }
+    #vnvLuxuryWizard .choice:hover{
+      transform: translateY(-1px);
+      border-color: rgba(198,167,94,.55);
+      box-shadow: 0 14px 34px rgba(0,0,0,.08);
+      background: rgba(198,167,94,.05);
+    }
+    #vnvLuxuryWizard .choice.selected{
+      border-color: rgba(198,167,94,.75);
+      background: rgba(198,167,94,.10);
+    }
+    #vnvLuxuryWizard .choice strong{
+      display:block;
+      font-size: 17px;
+      font-weight: 990;
+      color: var(--black);
+      margin-bottom: 6px;
+    }
+    #vnvLuxuryWizard .choice span{
+      display:block;
+      font-size: 15px;
+      color: var(--muted);
+      line-height: 1.35;
+      font-weight: 700;
+    }
+
+    /* Services chips */
+    #vnvLuxuryWizard .svcWrap{
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+      background: #fff;
+      box-shadow: 0 12px 30px rgba(0,0,0,.05);
+    }
+    #vnvLuxuryWizard .svcTop{
+      display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
+      flex-wrap:wrap;
+      margin-bottom: 10px;
+    }
+    #vnvLuxuryWizard .svcRec{
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(198,167,94,.35);
+      background: rgba(198,167,94,.10);
+      color: #2a2010;
+      font-size: 14px;
+      font-weight: 900;
+      line-height: 1.4;
+      max-width: 560px;
+    }
+    #vnvLuxuryWizard .svcRec b{ font-weight: 990; }
+    #vnvLuxuryWizard .svcGroup{ margin-top: 14px; }
+    #vnvLuxuryWizard .svcTitle{
+      font-size: 14px;
+      font-weight: 990;
+      color: var(--black);
+      margin: 10px 0 8px;
+      letter-spacing:.2px;
+    }
+    #vnvLuxuryWizard .chips{
+      display:flex; flex-wrap:wrap; gap:8px;
+    }
+    #vnvLuxuryWizard .chip{
+      border: 1px solid rgba(0,0,0,.10);
+      background: #fff;
+      color: var(--black);
+      padding: 11px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 950;
+      cursor:pointer;
+      transition: transform .10s ease, border-color .12s ease, background .12s ease, box-shadow .12s ease;
+      box-shadow: 0 10px 22px rgba(0,0,0,.04);
+      user-select:none;
+      min-height: 42px;
+    }
+    #vnvLuxuryWizard .chip:hover{
+      transform: translateY(-1px);
+      border-color: rgba(198,167,94,.55);
+      background: rgba(198,167,94,.06);
+    }
+    #vnvLuxuryWizard .chip.on{
+      border-color: rgba(198,167,94,.80);
+      background: linear-gradient(135deg, rgba(198,167,94,.16), rgba(230,198,122,.14));
+    }
+    #vnvLuxuryWizard .chip.on::after{
+      content:" ✓";
+      color:#7a5a1f;
+      font-weight: 990;
+    }
+
+    #vnvLuxuryWizard .field{ display:grid; gap:6px; margin-top: 10px; }
+    #vnvLuxuryWizard label{
+      font-size: 13px;
+      font-weight: 990;
+      color: var(--black);
+      letter-spacing: .2px;
+    }
+    #vnvLuxuryWizard input, #vnvLuxuryWizard textarea{
+      width:100%;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      padding: 13px 12px;
+      font-size: 15px;
+      outline:none;
+      background: #fff;
+      color: var(--text);
+      font-weight: 700;
+    }
+    #vnvLuxuryWizard textarea{ min-height: 110px; resize: vertical; }
+
+    #vnvLuxuryWizard .inlineNote{
+      margin-top: 12px;
+      font-size: 14px;
+      font-weight: 750;
+      color: rgba(20,20,22,.72);
+      line-height: 1.55;
+    }
+
+    /* Recommendation / price styling: more “callout” */
+    #vnvLuxuryWizard .priceBox{
+      border-radius: 18px;
+      border: 1px solid rgba(198,167,94,.38);
+      background: linear-gradient(135deg, rgba(198,167,94,.14), rgba(230,198,122,.10));
+      padding: 18px;
+      margin-top: 6px;
+      box-shadow: 0 14px 36px rgba(198,167,94,.18);
+    }
+    #vnvLuxuryWizard .priceBox b{
+      display:block; font-size: 14px; color: var(--black); font-weight: 990;
+      letter-spacing:.2px;
+    }
+    #vnvLuxuryWizard .priceBig{
+      font-size: clamp(34px, 4.2vw, 44px);
+      font-weight: 1000;
+      letter-spacing: -1.0px;
+      margin-top: 6px;
+      color: var(--black);
+      line-height: 1.05;
+    }
+    #vnvLuxuryWizard .priceBox p{
+      margin: 10px 0 0 0;
+      font-size: 15px;
+      color: rgba(20,20,22,.82);
+      line-height: 1.6;
+      font-weight: 750;
+    }
+
+    /* Final CTA screen (after submit) */
+    #vnvLuxuryWizard .finalCard{
+      border-radius: 18px;
+      border: 1px solid rgba(0,0,0,.10);
+      background: #fff;
+      padding: 16px;
+      box-shadow: 0 12px 30px rgba(0,0,0,.06);
+      margin-top: 12px;
+    }
+    #vnvLuxuryWizard .finalTop{
+      display:flex; gap:12px; flex-wrap:wrap; align-items:flex-start; justify-content:space-between;
+      margin-bottom: 10px;
+    }
+    #vnvLuxuryWizard .finalTitle{
+      font-weight: 1000;
+      font-size: 18px;
+      color: var(--black);
+      letter-spacing: -.2px;
+    }
+    #vnvLuxuryWizard .finalSub{
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 750;
+      line-height: 1.55;
+      max-width: 66ch;
+    }
+    #vnvLuxuryWizard .finalBtns{
+      display:flex; gap:10px; flex-wrap:wrap;
+      margin-top: 8px;
+    }
+    #vnvLuxuryWizard .btnOutline{
+      background:#fff;
+      border: 1px solid rgba(0,0,0,.12);
+      color: var(--black);
+      box-shadow: 0 12px 26px rgba(0,0,0,.05);
+    }
+    #vnvLuxuryWizard .btnOutline:hover{
+      transform: translateY(-1px);
+      border-color: rgba(198,167,94,.55);
+      box-shadow: 0 16px 34px rgba(0,0,0,.08);
+    }
+
+    #vnvLuxuryWizard .err{
+      display:none;
+      margin-top: 10px;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(220,38,38,.25);
+      background: rgba(220,38,38,.06);
+      color: #991b1b;
+      font-size: 14px;
+      line-height: 1.45;
+      font-weight: 950;
+    }
+    #vnvLuxuryWizard .success{
+      display:none;
+      margin-top: 10px;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(34,197,94,.25);
+      background: rgba(34,197,94,.08);
+      color: #166534;
+      font-size: 14px;
+      line-height: 1.45;
+      font-weight: 950;
+    }
+
+    #vnvLuxuryWizard .mFooter{
+      padding: 16px 18px;
+      border-top: 1px solid var(--border);
+      background: #fff;
+      display:flex; justify-content:space-between; gap: 12px; flex-wrap:wrap;
+      align-items:center;
+    }
+    #vnvLuxuryWizard .btnGhost{
+      background:#fff;
+      border: 1px solid var(--border);
+      color: var(--black);
+      box-shadow: 0 12px 26px rgba(0,0,0,.05);
+      min-height: 54px;
+      min-width: 140px;
+      font-weight: 980;
+    }
+    #vnvLuxuryWizard .btnGhost:hover{
+      transform: translateY(-1px);
+      border-color: rgba(198,167,94,.55);
+      box-shadow: 0 16px 34px rgba(0,0,0,.08);
+    }
+
+    #vnvLuxuryWizard .sending{ opacity:.72; pointer-events:none; }
+
+    @media (max-width: 820px){
+      #vnvLuxuryWizard .hero{
+        min-height: 82vh;
+        padding-top: 70px;
+        padding-bottom: 70px;
+      }
+      #vnvLuxuryWizard h1{
+        font-size: clamp(38px, 9.5vw, 54px);
+        letter-spacing: -1.2px;
+      }
+      #vnvLuxuryWizard .sub{ font-size: 18px; }
+      #vnvLuxuryWizard .btn{ width: 100%; }
+      #vnvLuxuryWizard .ctaRow{ gap:10px; }
+      #vnvLuxuryWizard .fine{ display:block; }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      #vnvLuxuryWizard .btn, #vnvLuxuryWizard .choice, #vnvLuxuryWizard .chip{ transition:none !important; }
+    }
+  </style>
+
+  <div class="wrap">
+
+   
+
+    <section class="section">
+      <div class="container">
+        <div class="grid">
+          <div class="card">
+            <div class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M7 10l5-6 5 6"/>
+                <path d="M7 10h10"/>
+                <path d="M6 10l6 12 6-12"/>
+              </svg>
+            </div>
+            <h3>Wedding Planners</h3>
+            <p>Timeline, vendor coordination and flawless execution — with premium upgrades available.</p>
+            <div class="pills">
+              <span class="pill">Day-Of</span><span class="pill">Partial</span><span class="pill">Full Planning</span>
+            </div>
+            <button class="btn btnBlack" data-open="wizard" data-pref="wedding">Plan a Wedding →</button>
+          </div>
+
+          <div class="card">
+            <div class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 20V6l8-3 8 3v14"/>
+                <path d="M9 20v-6h6v6"/>
+                <path d="M8 9h2M8 12h2M14 9h2M14 12h2"/>
+              </svg>
+            </div>
+            <h3>Corporate Event Planners</h3>
+            <p>Run-of-show, vendor ops, staffing coordination and production support for high-end events.</p>
+            <div class="pills">
+              <span class="pill">Run of Show</span><span class="pill">Vendor Ops</span>
+            </div>
+            <button class="btn btnBlack" data-open="wizard" data-pref="corporate">Plan Corporate →</button>
+          </div>
+
+          <div class="card">
+            <div class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 2l1.5 5L19 9l-5.5 2L12 16l-1.5-5L5 9l5.5-2L12 2z"/>
+                <path d="M4 14l.8 2.6L7 18l-2.2.4L4 21l-.8-2.6L1 18l2.2-.4L4 14z"/>
+              </svg>
+            </div>
+            <h3>Private Event Planners</h3>
+            <p>Upscale celebrations designed with elegance — then executed seamlessly by one team.</p>
+            <div class="pills">
+              <span class="pill">Design</span><span class="pill">Setup</span><span class="pill">Execution</span>
+            </div>
+            <button class="btn btnBlack" data-open="wizard" data-pref="private">Plan Private →</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- MODAL -->
+  <div class="overlay" role="dialog" aria-modal="true" aria-label="Planner Wizard">
+    <div class="modal">
+      <div class="mHeader">
+        <b>Quick Planner Match</b>
+        <button class="close" data-close aria-label="Close">✕</button>
+      </div>
+
+      <div class="mBody">
+        <div class="progressWrap" aria-hidden="true">
+          <div class="progress"><i id="vnvBar"></i></div>
+          <div class="stepCount" id="vnvCount">Step 1/8</div>
+        </div>
+
+        <div id="vnvStep"></div>
+
+        <div class="err" id="vnvErr">Please complete the selection to continue.</div>
+        <div class="success" id="vnvSuccess">Perfect — request sent. Next: call us or visit our showroom.</div>
+      </div>
+
+      <div class="mFooter">
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn btnGhost" id="vnvBack">← Back</button>
+          <button class="btn btnGhost" id="vnvSkip" title="Skip optional details">Skip</button>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn btnBlack" id="vnvNext">Next →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const root = document.getElementById('vnvLuxuryWizard');
+      if(!root) return;
+
+      const overlay = root.querySelector('.overlay');
+      const stepEl = root.querySelector('#vnvStep');
+      const bar = root.querySelector('#vnvBar');
+      const countEl = root.querySelector('#vnvCount');
+      const btnBack = root.querySelector('#vnvBack');
+      const btnNext = root.querySelector('#vnvNext');
+      const btnSkip = root.querySelector('#vnvSkip');
+      const errEl = root.querySelector('#vnvErr');
+      const successEl = root.querySelector('#vnvSuccess');
+
+      const AJAX_ACTION = "vnv_planner_wizard_submit";
+      const AJAX_URL = (window.ajaxurl) ? window.ajaxurl : "/wp-admin/admin-ajax.php";
+
+      const PHONE = "+13052045427";
+      const ADDRESS = "Courtyard Business Center, 10258 NW 47th St, Sunrise, FL 33351";
+      const MAPS = "https://www.google.com/maps?q=" + encodeURIComponent(ADDRESS);
+      const IG = "https://www.instagram.com/vnv_events/";
+
+      const state = {
+        type: null,
+        scope: null,
+        guests: null,
+        budget: null,
+        services: [],
+        date: '',
+        city: '',
+        name: '',
+        email: '',
+        phone: '',
+        notes: '',
+        hp: ''
+      };
+
+      let step = 0;
+
+      const SERVICES = {
+        "Primary Services": [
+          "Event Planner","Event Coordinator","Venue Rental","DJ Services",
+          "Flower Decorations & Arrangements","Wedding Arches","Balloon Decorations","Photo Booth"
+        ],
+        "Catering": [
+          "Appetizers","Brunch Stations","Crepes Station","Desserts","Entrées & Sides","Paella Station","Pasta Station",
+          "Pizza Station","Salad Station","Taco Station","Sushi Boat Packages","Professional Servers","Bartenders"
+        ],
+        "Rentals": ["Tents","Chairs","Tables","Linens & Chargers","Dance Floor","Chandeliers","Coolers"],
+        "Décor, Lighting & Effects": [
+          "Backdrops & Draping",
+          "Balloon Décor",
+          "Welcome Boards & Seating Charts",
+          "Custom Signage Printing",
+          "Custom Floor Vinyl Wraps / Decals",
+          "Dance Floor Vinyl Wrap (Monogram / Pattern)",
+          "Monogram Projection",
+          "Uplighting",
+          "Cold Sparks / CO₂ / Confetti Cannons"
+        ],
+        "Photo & Video": ["Photography","Videography & Drone"]
+      };
+
+      const steps = [
+        { key:'type', title:"What type of event are you planning?",
+          hint:"Pick the category so we can tailor the best planning + production path.",
+          required:true,
+          render:()=>choices([
+            {value:'wedding', title:'Wedding', desc:'Timeline, vendors, ceremony + reception flow'},
+            {value:'corporate', title:'Corporate', desc:'Run-of-show, vendor ops, staffing, production'},
+            {value:'private', title:'Private', desc:'Birthdays, showers, anniversaries, quinceañeras'}
+          ],'type')
+        },
+        { key:'scope', title:"How much planning support do you need?",
+          hint:"This helps us recommend the right planning package level.",
+          required:true,
+          render:()=>choices([
+            {value:'day-of', title:'Day-Of Coordination', desc:'Final month review + execution on event day'},
+            {value:'partial', title:'Partial Planning', desc:'We manage key vendors, timeline & logistics'},
+            {value:'full', title:'Full Planning', desc:'End-to-end planning + full coordination & execution'},
+            {value:'custom', title:'Not sure / Custom', desc:'We’ll guide you based on your goals'}
+          ],'scope')
+        },
+        { key:'guests', title:"Estimated guest count?",
+          hint:"Quick estimate is perfect — we’ll refine later.",
+          required:true,
+          render:()=>choices([
+            {value:'1-25', title:'1–25 guests', desc:'Small / intimate'},
+            {value:'26-60', title:'26–60 guests', desc:'Medium size'},
+            {value:'61-120', title:'61–120 guests', desc:'Large event'},
+            {value:'120+', title:'120+ guests', desc:'Very large / production heavy'}
+          ],'guests')
+        },
+        { key:'budget', title:"Approximate total event budget?",
+          hint:"South Florida minimum budgets start at $5,000+. This helps us propose a realistic planning + production path.",
+          required:true,
+          render:()=>choices([
+            {value:'5-10k', title:'$5,000 – $10,000', desc:'Planning + recommended upgrades'},
+            {value:'10-25k', title:'$10,000 – $25,000', desc:'Full experience potential'},
+            {value:'25-50k', title:'$25,000 – $50,000', desc:'Premium production-ready'},
+            {value:'50k+', title:'$50,000+', desc:'High-end / luxury level'}
+          ],'budget')
+        },
+        { key:'services', title:"Select the services you need",
+          hint:"Most clients start with planning and add services like Flowers + Professional Staff for a seamless experience.",
+          required:false,
+          render:()=>renderServicesStep()
+        },
+        { key:'details', title:"A few quick details (optional)",
+          hint:"These help us respond faster with availability and logistics.",
+          required:false,
+          render:()=>`
+            <div class="grid2">
+              <div class="field">
+                <label>Preferred date</label>
+                <input type="date" id="vnvDate" value="${esc(state.date)}">
+              </div>
+              <div class="field">
+                <label>City</label>
+                <input type="text" id="vnvCity" placeholder="Miami, Fort Lauderdale, West Palm..." value="${esc(state.city)}">
+              </div>
+            </div>
+            <div class="inlineNote">You can skip this step if you’re not sure yet.</div>
+          `
+        },
+        { key:'result', title:"Your recommended starting package",
+          hint:"We’ll tailor your full experience based on your answers + selected services.",
+          required:false,
+          render:()=>{
+            const rec=getRecommendation(state);
+
+            const servicesLine = state.services.length
+              ? `<p style="margin:12px 0 0 0;"><b>Selected services:</b> ${esc(state.services.join(", "))}</p>`
+              : `<p style="margin:12px 0 0 0;"><b>Premium Tip:</b> Add <b>Flowers</b> + <b>Professional Staff</b> to elevate the entire experience.</p>`;
+
+            return `
+              <div class="priceBox">
+                <b>Recommendation</b>
+                <div class="priceBig">${esc(rec.label)}</div>
+                <p><b>Planning fee starts at:</b> ${esc(rec.price)}<br>${esc(rec.copy)}</p>
+                ${servicesLine}
+              </div>
+
+              <div class="grid2" style="margin-top:14px;">
+                <div class="field">
+                  <label>Your name</label>
+                  <input type="text" id="vnvName" placeholder="Full name" value="${esc(state.name)}">
+                </div>
+                <div class="field">
+                  <label>Email</label>
+                  <input type="email" id="vnvEmail" placeholder="you@email.com" value="${esc(state.email)}">
+                </div>
+                <div class="field">
+                  <label>Phone (optional)</label>
+                  <input type="tel" id="vnvPhone" placeholder="(305) 204-5427" value="${esc(state.phone)}">
+                </div>
+                <div class="field">
+                  <label>Anything else?</label>
+                  <textarea id="vnvNotes" placeholder="Venue, theme, must-haves...">${esc(state.notes)}</textarea>
+                </div>
+
+                <div class="field" style="display:none;">
+                  <label>Leave this field empty</label>
+                  <input type="text" id="vnvHP" value="">
+                </div>
+              </div>
+
+              <div class="inlineNote">
+                After you submit, we’ll show the fastest ways to reach us (call / directions / Instagram portfolio).
+              </div>
+            `;
+          }
+        },
+        /* FINAL step (only after submit) */
+        { key:'final', title:"Request received ✅",
+          hint:"Want the fastest response? Choose one of the options below.",
+          required:false,
+          render:()=>{
+            const rec=getRecommendation(state);
+            return `
+              <div class="finalCard">
+                <div class="finalTop">
+                  <div>
+                    <div class="finalTitle">You’re set. We’re ready when you are.</div>
+                    <div class="finalSub">
+                      <b>Recommendation:</b> ${esc(rec.label)} — <b>starts at</b> ${esc(rec.price)}.<br>
+                      Call our office now, visit our showroom in Sunrise, or browse our real-event portfolio on Instagram.
+                      <br><br><b>Showroom:</b> ${esc(ADDRESS)}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="finalBtns">
+                  <a class="btn btnBlack" href="tel:${PHONE}">Call Now</a>
+                  <a class="btn btnOutline" target="_blank" rel="noopener" href="${MAPS}">Get Directions</a>
+                  <a class="btn btnGold" target="_blank" rel="noopener" href="${IG}">Instagram Portfolio</a>
+                </div>
+
+                <div class="inlineNote" style="margin-top:12px;">
+                  Prefer messaging? Tap the WhatsApp button on this page — we respond fast during business hours.
+                </div>
+              </div>
+            `;
+          }
+        }
+      ];
+
+      function esc(str){
+        return String(str ?? '')
+          .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
+          .replaceAll('"','&quot;').replaceAll("'","&#039;");
+      }
+
+      function choices(items, key){
+        const selected = state[key];
+        return `
+          <div class="grid2">
+            ${items.map(it=>`
+              <button class="choice ${selected===it.value?'selected':''}" data-choice="${it.value}" data-key="${key}">
+                <strong>${esc(it.title)}</strong>
+                <span>${esc(it.desc)}</span>
+              </button>
+            `).join('')}
+          </div>
+        `;
+      }
+
+      function serviceRecommendedText(){
+        if(state.type==='wedding'){
+          return `<b>Recommended for weddings:</b> Flower Decorations & Arrangements, Professional Servers, Bartenders, Photography, DJ Services.`;
+        }
+        if(state.type==='corporate'){
+          return `<b>Recommended for corporate:</b> Professional Servers, Bartenders, Catering, Rentals, Uplighting.`;
+        }
+        return `<b>Recommended:</b> Décor, DJ Services, Catering, Professional Staff, Photo/Video.`;
+      }
+
+      function renderServicesStep(){
+        const rec = serviceRecommendedText();
+        return `
+          <div class="svcWrap">
+            <div class="svcTop">
+              <div class="svcRec">${rec}<br><span style="font-weight:750;color:rgba(42,32,16,.78)">Select any that apply (optional). We’ll refine your final quote.</span></div>
+              <div class="svcRec" style="max-width:340px">
+                <b>Premium Tip:</b><br>
+                Add <b>Flowers</b> + <b>Professional Staff</b> to elevate the entire experience.
+              </div>
+            </div>
+
+            ${Object.keys(SERVICES).map(group=>`
+              <div class="svcGroup">
+                <div class="svcTitle">${esc(group)}</div>
+                <div class="chips">
+                  ${SERVICES[group].map(svc=>`
+                    <span class="chip ${state.services.includes(svc)?'on':''}" data-chip="${esc(svc)}">${esc(svc)}</span>
+                  `).join('')}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          <div class="inlineNote">This step is optional. It helps us respond with better recommendations.</div>
+        `;
+      }
+
+      function openWizard(pref){
+        if(pref && ['wedding','corporate','private'].includes(pref)){
+          state.type=pref;
+          step=1;
+        } else step=0;
+
+        errEl.style.display='none';
+        successEl.style.display='none';
+        overlay.classList.add('open');
+        document.documentElement.style.overflow='hidden';
+        render();
+      }
+
+      function closeWizard(){
+        overlay.classList.remove('open');
+        document.documentElement.style.overflow='';
+      }
+
+      function setProgress(){
+        const pct = Math.round(((step+1)/steps.length)*100);
+        bar.style.width = pct + '%';
+        countEl.textContent = `Step ${step+1}/${steps.length}`;
+      }
+
+      function render(){
+        setProgress();
+        errEl.style.display='none';
+
+        const s=steps[step];
+        stepEl.innerHTML = `
+          <h3 class="stepTitle">${esc(s.title)}</h3>
+          <p class="stepHint">${esc(s.hint)}</p>
+          ${s.render()}
+        `;
+
+        btnBack.style.visibility = step===0 ? 'hidden' : 'visible';
+        btnSkip.style.display = (s.key==='details') ? 'inline-flex' : 'none';
+
+        if(s.key==='result') btnNext.textContent = 'Submit →';
+        else if(s.key==='final') btnNext.textContent = 'Close';
+        else btnNext.textContent = 'Next →';
+
+        btnBack.style.minWidth="140px";
+        btnSkip.style.minWidth="140px";
+        btnNext.style.minWidth="140px";
+      }
+
+      function validateStep(){
+        const s=steps[step];
+        if(!s.required) return true;
+        if(s.key==='type' && !state.type) return false;
+        if(s.key==='scope' && !state.scope) return false;
+        if(s.key==='guests' && !state.guests) return false;
+        if(s.key==='budget' && !state.budget) return false;
+        return true;
+      }
+
+      function captureOptionalFields(){
+        const date=root.querySelector('#vnvDate');
+        const city=root.querySelector('#vnvCity');
+        if(date) state.date=date.value||'';
+        if(city) state.city=city.value||'';
+      }
+
+      function captureLeadFields(){
+        const name=root.querySelector('#vnvName');
+        const email=root.querySelector('#vnvEmail');
+        const phone=root.querySelector('#vnvPhone');
+        const notes=root.querySelector('#vnvNotes');
+        const hp=root.querySelector('#vnvHP');
+        if(name) state.name=name.value.trim();
+        if(email) state.email=email.value.trim();
+        if(phone) state.phone=phone.value.trim();
+        if(notes) state.notes=notes.value.trim();
+        if(hp) state.hp=hp.value.trim();
+      }
+
+      function isEmailValid(email){
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      }
+
+      function getRecommendation(s){
+        let label="Basic Planning (8 Hours Day coordination - 12 Hours Planning)";
+        let price="$1,950 ";
+        if(s.scope==='partial'){ label="Gold Planning (8 Hours Day coordination - 18 Hours Planning)"; price="$2,650"; }
+        if(s.scope==='full'){ label="Premium Planning (8 Hours Day coordination - 24 Hours Planning)"; price="$3,250"; }
+        if(s.scope==='custom'){ label="Custom Planning"; price="Custom Proposal"; }
+
+        const heavy = (s.guests==='120+' || s.budget==='50k+' || s.budget==='25-50k');
+        const mid = (s.guests==='61-120' || s.budget==='10-25k');
+
+        let copy="Includes planning, vendor coordination, timeline/run-of-show and execution support. Add-ons: catering, flowers, staff, décor, DJ, rentals, photo/video.";
+        if(s.type==='corporate'){
+          copy="Corporate-ready planning: run-of-show, vendor ops, staffing coordination and production support. Add-ons: catering, rentals, lighting, branded experiences.";
+        }
+        if(heavy) copy += " Your answers suggest a premium scope — we’ll propose a structured plan to keep everything seamless.";
+        else if(mid) copy += " Great fit for upgrades and a full experience.";
+        else copy += " Perfect for an elegant, organized event with optional upgrades.";
+
+        return {label, price, copy};
+      }
+
+      async function submit(){
+        captureLeadFields();
+        if(state.hp){
+          errEl.textContent="Unable to submit. Please try again.";
+          errEl.style.display='block';
+          return;
+        }
+        if(!state.name || !state.email || !isEmailValid(state.email)){
+          errEl.textContent="Please add your name and a valid email to submit.";
+          errEl.style.display='block';
+          return;
+        }
+
+        const payload = {
+          action: AJAX_ACTION,
+          source: 'event-planners-luxury-wizard',
+          type: state.type,
+          scope: state.scope,
+          guests: state.guests,
+          budget: state.budget,
+          services: state.services,
+          date: state.date,
+          city: state.city,
+          name: state.name,
+          email: state.email,
+          phone: state.phone,
+          notes: state.notes,
+          page: window.location.href,
+          created_at: new Date().toISOString()
+        };
+
+        errEl.style.display='none';
+        successEl.style.display='none';
+        btnNext.classList.add('sending');
+        btnNext.textContent="Sending...";
+
+        try{
+          const res = await fetch(AJAX_URL,{
+            method:"POST",
+            headers:{"Content-Type":"application/x-www-form-urlencoded; charset=UTF-8"},
+            body:new URLSearchParams(payload).toString()
+          });
+
+          const text=await res.text();
+          let ok=false;
+          try{ ok=!!JSON.parse(text).success; }
+          catch(e){ ok=res.ok; }
+
+          if(!ok) throw new Error("Send failed");
+
+          successEl.style.display='block';
+          successEl.textContent="Perfect — request sent. Next: call us or visit our showroom.";
+          btnNext.textContent="Sent ✓";
+
+          // Move to FINAL step (post-submit CTA screen)
+          step = steps.findIndex(x => x.key === 'final');
+          render();
+
+        }catch(err){
+          errEl.textContent="Could not send right now. Please try again or call us directly: +1 305-204-5427.";
+          errEl.style.display='block';
+          btnNext.textContent="Submit →";
+        }finally{
+          btnNext.classList.remove('sending');
+        }
+      }
+
+      root.addEventListener('click',(e)=>{
+        const openBtn=e.target.closest('[data-open="wizard"]');
+        if(openBtn){
+          openWizard(openBtn.getAttribute('data-pref'));
+          return;
+        }
+        const closeBtn=e.target.closest('[data-close]');
+        if(closeBtn){ closeWizard(); return; }
+        if(e.target===overlay){ closeWizard(); return; }
+
+        const choiceBtn=e.target.closest('.choice');
+        if(choiceBtn){
+          const key=choiceBtn.getAttribute('data-key');
+          const val=choiceBtn.getAttribute('data-choice');
+          if(key){ state[key]=val; render(); }
+          return;
+        }
+
+        const chip=e.target.closest('.chip');
+        if(chip){
+          const svc=chip.getAttribute('data-chip');
+          if(!svc) return;
+          const idx=state.services.indexOf(svc);
+          if(idx>=0) state.services.splice(idx,1);
+          else state.services.push(svc);
+          render();
+          return;
+        }
+      });
+
+      btnBack.addEventListener('click',()=>{
+        captureOptionalFields(); captureLeadFields();
+        if(step===0) return;
+        step--; render();
+      });
+
+      btnSkip.addEventListener('click',()=>{
+        captureOptionalFields();
+        step++; render();
+      });
+
+      btnNext.addEventListener('click',()=>{
+        captureOptionalFields();
+
+        // If we're on FINAL step, Close
+        if(steps[step].key==='final'){
+          closeWizard();
+          return;
+        }
+
+        if(!validateStep()){
+          errEl.textContent="Please complete the selection to continue.";
+          errEl.style.display='block';
+          return;
+        }
+
+        if(steps[step].key==='result'){
+          submit();
+          return;
+        }
+
+        step++; render();
+      });
+
+      document.addEventListener('keydown',(e)=>{
+        if(e.key==='Escape' && overlay.classList.contains('open')) closeWizard();
+      });
+
+      render();
+    })();
+  </script>
+
+</div>
