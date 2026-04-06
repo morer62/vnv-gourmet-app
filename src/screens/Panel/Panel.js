@@ -1,10 +1,6 @@
 // eslint-disable-next-line import/no-unresolved
-import { API_URL } from "@env";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
-import axios from "axios";
-import Constants from "expo-constants";
-import * as Notifications from "expo-notifications";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
@@ -151,22 +147,28 @@ function getPanelConfig(level) {
   ];
 
   const clientPrimary = [
-    {
-      label: "My Orders",
-      description: "Review previous purchases and order history.",
-      url: "panel/store/orders/home",
-    },
-    {
-      label: "My Subscription",
-      description: "Manage your plan and weekly charges.",
-      url: "panel/store/subscriptions/home",
-    },
-    {
-      label: "Order Again",
-      description: "Return to the store and start a new order.",
-      url: "meal-plans",
-    },
-  ];
+  
+  {
+    label: "Nutrition Advisor",
+    description: "Use the nutrition calculator and get practical guidance.",
+    url: "panel/store/nutrition-advisor",
+  },
+  {
+    label: "Wellness Advisor",
+    description: "Explore wellness tools and personalized support.",
+    url: "panel/store/wellness-advisor",
+  },
+  {
+    label: "My Subscription",
+    description: "Manage your plan and weekly charges.",
+    url: "panel/store/subscriptions/home",
+  },
+  {
+    label: "Order Again",
+    description: "Return to the store and start a new order.",
+    url: "meal-plans",
+  },
+];
 
   const clientSecondary = [
     {
@@ -371,7 +373,7 @@ export function Panel() {
     }).start();
   }, [fadeAnim]);
 
-  useEffect(() => {
+  /*useEffect(() => {
     async function loadExpoNotifications() {
       try {
         const projectId =
@@ -403,7 +405,7 @@ export function Panel() {
 
     if (!token) return;
     loadExpoNotifications();
-  }, [token]);
+  }, [token]); */
 
   const navigateTo = (fullPath) => {
     if (!token || !fullPath) return;

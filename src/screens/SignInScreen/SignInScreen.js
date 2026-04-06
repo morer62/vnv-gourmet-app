@@ -21,7 +21,7 @@ import {
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import Logo from '../../../assets/images/icon.png';
+import Logo from '../../../assets/images/icon_login.png';
 import LoadingOverlay from '../../components/LoadingOverlay';
 import { useUserContext } from '../../context/userContext';
 import AlertMain from '../../utils/AlertMain';

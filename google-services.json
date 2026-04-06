@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "634737147782",
+    "project_id": "avomeal-fc9aa",
+    "storage_bucket": "avomeal-fc9aa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:634737147782:android:ba326cd28b839645da7607",
+        "android_client_info": {
+          "package_name": "com.vnvevents.avomeal"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBX5fmVwtiTAS2D_vSUU0jJ2b-UHzP06jA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

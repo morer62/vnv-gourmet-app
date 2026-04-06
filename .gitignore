@@ -41,5 +41,4 @@ android/
 .idea
 .env
 .env.*
-google-services.json
 GoogleService-Info.plist

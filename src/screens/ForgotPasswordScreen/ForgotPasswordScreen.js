@@ -16,7 +16,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Logo from "../../../assets/images/icon.png";
+import Logo from "../../../assets/images/icon_login.png";
 
 export const ForgotPasswordScreen = () => {
   const navigation = useNavigation();
