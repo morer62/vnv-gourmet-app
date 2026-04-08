@@ -1,6 +1,10 @@
 {
   "build": {
     "production": {
+      "env": {
+        "API_URL": "https://avomeal.com/"
+      },
+      "ios": {},
       "android": {
         "buildType": "app-bundle"
       }

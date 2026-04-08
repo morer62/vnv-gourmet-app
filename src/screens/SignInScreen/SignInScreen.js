@@ -1,9 +1,8 @@
 // eslint-disable-next-line import/no-unresolved
-import { API_URL } from '@env';
+const API_URL = process.env.API_URL;
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
-import * as Notifications from 'expo-notifications';
 import { useState } from 'react';
 import {
   Alert,
@@ -49,31 +48,34 @@ export const SignInScreen = () => {
   const [isOnThirdPartySigninIn, setIsOnThridPartySignIn] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const BASE = API_URL?.endsWith('/') ? API_URL : `${API_URL}/`;
-  const loginUrl = `${BASE}api/auth/login`;
+  const BASE = API_URL?.trim()
+  ? (API_URL.endsWith('/') ? API_URL : `${API_URL}/`)
+  : '';
+const loginUrl = `${BASE}api/auth/login`;
 
   const onSignInPressed = async () => {
     setIsDisabled(true);
 
     try {
-      let expo_token = '';
-      try {
-        const { status } = await Notifications.requestPermissionsAsync();
-        if (status === 'granted') {
-          // const tokenData = await Notifications.getExpoPushTokenAsync();
-          // expo_token = tokenData.data;
-        }
-      } catch (e) {
-        console.log('[LOGIN] Expo token error:', e?.message);
-      }
+      const formBody = new URLSearchParams({
+        email,
+        password,
+        expo_token: '',
+      }).toString();
 
-      const formBody = new URLSearchParams({ email, password, expo_token }).toString();
+      console.log('[LOGIN API_URL]', API_URL);
+      console.log('[LOGIN BASE]', BASE);
+      console.log('[LOGIN URL]', loginUrl);
+      console.log('[LOGIN EMAIL]', email);
 
       const res = await axios.post(loginUrl, formBody, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         timeout: 15000,
         validateStatus: () => true,
       });
+
+      console.log('[LOGIN STATUS]', res?.status);
+      console.log('[LOGIN RESPONSE]', res?.data);
 
       if (res.data?.success) {
         await AsyncStorage.setItem('Token', res.data.token);
@@ -83,8 +85,16 @@ export const SignInScreen = () => {
       } else {
         AlertMain(res.data?.message || 'Login failed');
       }
-    } catch {
-      AlertMain('Connection error');
+    } catch (error) {
+      console.log('[LOGIN ERROR message]', error?.message);
+      console.log('[LOGIN ERROR code]', error?.code);
+      console.log('[LOGIN ERROR status]', error?.response?.status);
+      console.log('[LOGIN ERROR response]', error?.response?.data);
+      console.log('[LOGIN ERROR API_URL]', API_URL);
+      console.log('[LOGIN ERROR BASE]', BASE);
+      console.log('[LOGIN ERROR URL]', loginUrl);
+
+      AlertMain(`Connection error: ${error?.message || 'unknown error'}`);
     } finally {
       setIsDisabled(false);
     }
@@ -95,11 +105,23 @@ export const SignInScreen = () => {
       const res = await axios.post(
         loginUrl,
         new URLSearchParams({ google_token }).toString(),
-        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+        {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          timeout: 15000,
+          validateStatus: () => true,
+        }
       );
+
+      console.log('[GOOGLE LOGIN STATUS]', res?.status);
+      console.log('[GOOGLE LOGIN RESPONSE]', res?.data);
 
       await handleUserPostAuthentication(res);
     } catch (error) {
+      console.log('[GOOGLE LOGIN ERROR message]', error?.message);
+      console.log('[GOOGLE LOGIN ERROR code]', error?.code);
+      console.log('[GOOGLE LOGIN ERROR status]', error?.response?.status);
+      console.log('[GOOGLE LOGIN ERROR response]', error?.response?.data);
+
       if (error.response?.status === 404) {
         onThridPartyNonAccount(google_token, 'GOOGLE');
         return;
@@ -121,11 +143,21 @@ export const SignInScreen = () => {
       });
 
       const response = await axios.post(loginUrl, payload.toString(), {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        timeout: 15000,
+        validateStatus: () => true,
       });
+
+      console.log('[APPLE LOGIN STATUS]', response?.status);
+      console.log('[APPLE LOGIN RESPONSE]', response?.data);
 
       await handleUserPostAuthentication(response);
     } catch (error) {
+      console.log('[APPLE LOGIN ERROR message]', error?.message);
+      console.log('[APPLE LOGIN ERROR code]', error?.code);
+      console.log('[APPLE LOGIN ERROR status]', error?.response?.status);
+      console.log('[APPLE LOGIN ERROR response]', error?.response?.data);
+
       if (error.response?.status === 404) {
         onThridPartyNonAccount(value, 'IOS');
         return;
@@ -173,6 +205,7 @@ export const SignInScreen = () => {
       AlertMain('Google Sign-in no está disponible. Por favor, usa un development build.');
       return;
     }
+
     try {
       setIsOnThridPartySignIn(true);
 
@@ -190,6 +223,7 @@ export const SignInScreen = () => {
 
       setIsOnThridPartySignIn(false);
     } catch (error) {
+      console.log('[GOOGLE PRESS ERROR]', error?.message);
       setIsOnThridPartySignIn(false);
     }
   };
