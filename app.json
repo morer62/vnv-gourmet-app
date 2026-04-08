@@ -2,7 +2,7 @@
   "expo": {
     "name": "Avomeal",
     "slug": "avomeal-app",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/images/mobile-app-icon.png",
     "scheme": "avomeal",
@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.vnvevents.avomeal",
-      "buildNumber": "1.0.3",
+      "buildNumber": "1.0.4",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "UIBackgroundModes": [
@@ -26,7 +26,7 @@
     },
     "android": {
       "package": "com.vnvevents.avomeal",
-      "versionCode": 10003,
+      "versionCode": 10004,
       "googleServicesFile": "./google-services.json",
       "edgeToEdgeEnabled": true,
       "adaptiveIcon": {

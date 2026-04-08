@@ -1,16 +1,19 @@
 // eslint-disable-next-line import/no-unresolved
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Constants from "expo-constants";
 import { useNavigation } from "@react-navigation/native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Image,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import axios from "axios";
 
 import Icon1 from "../../../assets/images/icons_website/icon_1.png";
 import Icon10 from "../../../assets/images/icons_website/icon_10.png";
@@ -373,29 +376,54 @@ export function Panel() {
     }).start();
   }, [fadeAnim]);
 
-  /*useEffect(() => {
+  useEffect(() => {
+    if (!token) return;
+    if (Platform.OS === "android" && Constants.appOwnership === "expo") {
+      return;
+    }
+
+    let cancelled = false;
+
     async function loadExpoNotifications() {
       try {
+        const Notifications = require("expo-notifications");
         const projectId =
-          Constants?.expoConfig?.extra?.eas?.projectId ??
-          Constants?.easConfig?.projectId;
+          Constants.expoConfig?.extra?.eas?.projectId ??
+          Constants.easConfig?.projectId;
+
+        if (!projectId) {
+          console.warn(
+            "[Expo push] Falta extra.eas.projectId en app.json — no se puede obtener el token."
+          );
+          return;
+        }
 
         const { status } = await Notifications.requestPermissionsAsync();
+        if (status !== "granted" || cancelled) return;
 
-        if (status === "granted") {
-          const expoPushToken = await Notifications.getExpoPushTokenAsync({
-            projectId,
-          });
+        const expoPushToken = await Notifications.getExpoPushTokenAsync({
+          projectId,
+        });
+        if (cancelled) return;
 
-          await axios.post(
-            `${API_URL}/api/set-expo-push-token`,
-            { expo_push_token: expoPushToken.data },
-            {
-              headers: {
-                Authorization: token,
-                "Content-Type": "application/json",
-              },
-            }
+        await axios.post(
+          "api/set-expo-push-token",
+          {
+            expo_push_token: expoPushToken.data,
+            api_token: token,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (__DEV__) {
+          console.log(
+            "[Expo push] Registrado en el servidor. Prueba en https://expo.dev/notifications — token:",
+            expoPushToken.data
           );
         }
       } catch (error) {
@@ -403,9 +431,11 @@ export function Panel() {
       }
     }
 
-    if (!token) return;
     loadExpoNotifications();
-  }, [token]); */
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
 
   const navigateTo = (fullPath) => {
     if (!token || !fullPath) return;

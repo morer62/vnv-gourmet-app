@@ -1,7 +1,7 @@
 import { GOOGLE_CLIENT_ID_IOS, GOOGLE_CLIENT_ID_WEB } from "@env";
-import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
 import { useEffect } from 'react';
-import { StatusBar, View } from "react-native";
+import { Platform, StatusBar, View } from "react-native";
 import Root from "./src/Root";
 
 // Importar GoogleSignin de forma condicional
@@ -13,24 +13,40 @@ try {
   GoogleSignin = null;
 }
 
-Notifications.addNotificationReceivedListener(notification => {
-  console.log("Notification received in foreground:", notification);
-});
-
-Notifications.addNotificationResponseReceivedListener(response => {
-  console.log("User interacted with notification:", response);
-});
-
-// Configurar notificaciones para mostrarse siempre, incluso si la app está abierta
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
+/**
+ * SDK 53+: push remoto en Android fue removido de Expo Go.
+ * Cargar expo-notifications ahí dispara error / snackbar. En dev build sí aplica.
+ * @see https://docs.expo.dev/develop/development-builds/introduction/
+ */
+function shouldSkipExpoNotifications() {
+  return Platform.OS === 'android' && Constants.appOwnership === 'expo';
+}
 
 export default function App() {
+
+  useEffect(() => {
+    if (shouldSkipExpoNotifications()) {
+      return;
+    }
+    // require aquí evita que el módulo (y su auto-registro) cargue en Expo Go Android
+    const Notifications = require('expo-notifications');
+
+    Notifications.addNotificationReceivedListener((notification) => {
+      console.log("Notification received in foreground:", notification);
+    });
+
+    Notifications.addNotificationResponseReceivedListener((response) => {
+      console.log("User interacted with notification:", response);
+    });
+
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+      }),
+    });
+  }, []);
 
   useEffect(() => {
     if (GoogleSignin) {

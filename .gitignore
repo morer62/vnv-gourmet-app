@@ -42,3 +42,7 @@ android/
 .env
 .env.*
 GoogleService-Info.plist
+
+# Firebase Admin / FCM service account (secret; upload only via Expo/EAS, never commit)
+*firebase-adminsdk*.json
+*-firebase-adminsdk-*.json

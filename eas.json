@@ -2,7 +2,8 @@
   "build": {
     "production": {
       "env": {
-        "API_URL": "https://avomeal.com/"
+        "API_URL": "https://avomeal.com/",
+        "APP_VERSION": "2.0.0"
       },
       "ios": {},
       "android": {
