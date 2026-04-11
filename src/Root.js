@@ -3,14 +3,17 @@ import './config/axiosConfig';
 // eslint-disable-next-line import/no-unresolved
 import { APP_VERSION } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 // local imports
+import ForceUpdateModal from './components/ForceUpdateModal';
 import IntroVideo from './components/IntroVideo/IntroVideo';
 import { UserProvider } from './context/userContext';
 import getAppVersion from './http/getAppVersion';
 import Navigation from './navigation';
+import { isUpdateRequired } from './utils/semverCompare';
 
 const INTRO_DURATION_MS = 5000;
 
@@ -18,7 +21,13 @@ export default function Root() {
   const [loading, setLoading] = useState(true);
   const [isLogged, setIsLogged] = useState(false);
   const [needAppUpdate, setNeedAppUpdate] = useState(false);
+  const [requiredVersion, setRequiredVersion] = useState('');
   const [showIntro, setShowIntro] = useState(true);
+
+  const clientVersion =
+    (typeof APP_VERSION === 'string' && APP_VERSION.trim() !== ''
+      ? APP_VERSION.trim()
+      : null) || Constants.expoConfig?.version || '0.0.0';
 
   const introHiddenRef = useRef(false);
 
@@ -46,9 +55,13 @@ export default function Root() {
         if (!isMounted) return;
 
         console.log('🔥 App version Endpoint:', appVersionName);
-        console.log('🔥 App version Local:', APP_VERSION);
+        console.log('🔥 App version Local:', clientVersion);
 
-        setNeedAppUpdate(appVersionName !== APP_VERSION);
+        const mustUpdate = isUpdateRequired(clientVersion, appVersionName);
+        setNeedAppUpdate(mustUpdate);
+        if (mustUpdate && appVersionName) {
+          setRequiredVersion(String(appVersionName).trim());
+        }
         setIsLogged(token != null);
       } catch (error) {
         console.log('Root load error:', error?.message || error);
@@ -90,26 +103,14 @@ export default function Root() {
     );
   }
 
-  /*
-  if (needAppUpdate) {
-    return (
-      <View style={styles.container}>
-        <Text style={[styles.title, { textAlign: 'center' }]}>
-          A new version is available and needs to be updated
-        </Text>
-        <CustonButton
-          text="DOWNLOAD"
-          onPress={() => Linking.openURL(DownloadLink[Platform.OS])}
-          type="Tertiary"
-        />
-      </View>
-    );
-  }
-  */
-
   return (
     <UserProvider>
-      <Navigation isLogged={isLogged} />
+      {!needAppUpdate && <Navigation isLogged={isLogged} />}
+      <ForceUpdateModal
+        visible={needAppUpdate}
+        currentVersion={clientVersion}
+        requiredVersion={requiredVersion || '—'}
+      />
     </UserProvider>
   );
 }
@@ -124,11 +125,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     padding: 10,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1b60a4',
-    margin: 10,
   },
 });

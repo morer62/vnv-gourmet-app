@@ -2,6 +2,7 @@ import { GOOGLE_CLIENT_ID_IOS, GOOGLE_CLIENT_ID_WEB } from "@env";
 import Constants from 'expo-constants';
 import { useEffect } from 'react';
 import { Platform, StatusBar, View } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import Root from "./src/Root";
 
 // Importar GoogleSignin de forma condicional
@@ -57,12 +58,14 @@ export default function App() {
     }
   }, [])
   return (
-    <View style={{ flex: 1 }}>
-      <StatusBar 
-        backgroundColor="#6200EE"
-        barStyle="dark-content" 
-      />
-      <Root />
-    </View>
+    <SafeAreaProvider>
+      <View style={{ flex: 1 }}>
+        <StatusBar
+          backgroundColor="#6200EE"
+          barStyle="dark-content"
+        />
+        <Root />
+      </View>
+    </SafeAreaProvider>
   );
 }
