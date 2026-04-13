@@ -1,21 +1,6 @@
-// SignUpScreen.js
 import { API_URL } from '@env';
-import { AntDesign } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-
-// Importar GoogleSignin de forma condicional
-let GoogleSignin, isSuccessResponse;
-try {
-  const googleSignInModule = require('@react-native-google-signin/google-signin');
-  GoogleSignin = googleSignInModule.GoogleSignin;
-  isSuccessResponse = googleSignInModule.isSuccessResponse;
-} catch (error) {
-  console.warn('GoogleSignin no está disponible (probablemente estás usando Expo Go)');
-  GoogleSignin = null;
-  isSuccessResponse = null;
-}
-
 import axios from 'axios';
 import { useCallback, useMemo, useState } from 'react';
 import {
@@ -30,13 +15,10 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import AppleSignIn from '../../components/AppleSignIn';
 import CustomInput from '../../components/CustomInput';
 import { CustonButton } from '../../components/CustonButton/CustonButton';
-import LoadingOverlay from '../../components/LoadingOverlay';
 import { useUserContext } from '../../context/userContext';
 import AlertMain from '../../utils/AlertMain';
-import sleep from '../../utils/sleep';
 
 const ACCENT = '#f59e0b';
 const ACCENT_DARK = '#d97706';
@@ -55,20 +37,12 @@ const SHADOW = {
 };
 
 const BASE = API_URL?.endsWith('/') ? API_URL : `${API_URL}/`;
-
-const accountTypes = {
-  2: 'venue',
-  3: 'vendor',
-  5: 'client',
-};
+const APP_SIGNUP_LEVEL = '5';
 
 export const SignUpScreen = () => {
   const navigation = useNavigation();
   const { setUserData } = useUserContext();
 
-  const [step, setStep] = useState(1);
-  const [accountType, setAccountType] = useState(null);
-  const [isAccountCreating, setIsAccountCreating] = useState(false);
   const [name, setName] = useState('');
   const [lastname, setLastname] = useState('');
   const [email, setEmail] = useState('');
@@ -83,11 +57,6 @@ export const SignUpScreen = () => {
     return `${base}api/auth/signup`;
   }, []);
 
-  const handleTypeSelect = (type) => {
-    setAccountType(type);
-    setStep(2);
-  };
-
   const notify = useCallback((message) => {
     try {
       AlertMain(message);
@@ -96,49 +65,9 @@ export const SignUpScreen = () => {
     }
   }, []);
 
-  const handleUserAuth = useCallback(
-    async (response) => {
-      try {
-        const { token, user } = response.data.data;
-
-        await AsyncStorage.setItem('Token', token);
-        await AsyncStorage.setItem('UserData', JSON.stringify(user));
-        setUserData(user);
-
-        navigation.navigate('panelNavigator', { screen: 'Panel' });
-      } catch (error) {
-        console.log(error);
-      }
-    },
-    [setUserData, navigation]
-  );
-
-  const getGoogleToken = useCallback(async () => {
-    if (!GoogleSignin) {
-      throw new Error('Google Sign-in no está disponible. Por favor, usa un development build.');
-    }
-
-    try {
-      await GoogleSignin.hasPlayServices();
-      await GoogleSignin.signOut();
-
-      const response = await GoogleSignin.signIn({
-        prompt: 'select_account',
-      });
-
-      if (isSuccessResponse && isSuccessResponse(response)) {
-        const { idToken } = response.data;
-        return idToken;
-      }
-    } catch (error) {
-      throw error;
-    }
-  }, []);
-
   const handleRegister = async () => {
     Keyboard.dismiss();
 
-    if (!accountType) return notify('Please select your account type first');
     if (!name || !lastname || !email || !password || !passwordConfirmation) {
       return notify('Please fill out all fields');
     }
@@ -157,7 +86,7 @@ export const SignUpScreen = () => {
         phone: phoneNumber,
         password,
         passwordConfirmation,
-        level: String(accountType),
+        level: APP_SIGNUP_LEVEL,
       }).toString();
 
       const { data } = await axios.post(signupUrl, formBody, {
@@ -166,11 +95,23 @@ export const SignUpScreen = () => {
       });
 
       const success = !!data?.success;
+      const token = data?.data?.token || data?.token;
+      const user = data?.data?.user || data?.user;
       const message =
         data?.message ||
-        (success ? 'Account created successfully. Please log in.' : 'Signup failed');
+        (success ? 'Account created successfully.' : 'Signup failed');
 
       if (success) {
+        if (token && user) {
+          await AsyncStorage.setItem('Token', token);
+          await AsyncStorage.setItem('UserData', JSON.stringify(user));
+          setUserData(user);
+          notify('Account created successfully.');
+          setTimeout(() => {
+            navigation.navigate('panelNavigator', { screen: 'Panel' });
+          }, 250);
+          return;
+        }
         notify('Account created successfully. Please log in.');
         setTimeout(() => {
           navigation.reset({ index: 0, routes: [{ name: 'SignIn' }] });
@@ -188,88 +129,7 @@ export const SignUpScreen = () => {
     }
   };
 
-  const handleIosRegister = useCallback(
-    async (value) => {
-      const startTime = Date.now();
-      setIsAccountCreating(true);
-
-      try {
-        const payload = {
-          accountType: accountTypes[accountType],
-          identityToken: value.identityToken,
-        };
-
-        const response = await axios.post(`${BASE}api/auth/apple-signing/client-app`, payload, {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-
-        const elapsed = Date.now() - startTime;
-        const remaining = 2000 - elapsed;
-
-        if (remaining > 0) {
-          await sleep(3);
-        }
-
-        await handleUserAuth(response);
-        setIsAccountCreating(false);
-      } catch (error) {
-        console.log(error.response?.data);
-        setIsAccountCreating(false);
-        AlertMain('There was an error while signning up, please reatry again later!');
-      }
-    },
-    [setIsAccountCreating, accountType, handleUserAuth]
-  );
-
-  const handleGoogleRegister = useCallback(async () => {
-    setIsAccountCreating(true);
-
-    try {
-      const idToken = await getGoogleToken();
-      const startTime = Date.now();
-
-      const payload = {
-        idToken,
-        accountType: accountTypes[accountType],
-      };
-
-      const response = await axios.post(`${BASE}api/auth/google/signup-app`, payload, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const elapsed = Date.now() - startTime;
-      const remaining = 2000 - elapsed;
-
-      if (remaining > 0) {
-        await sleep(3);
-      }
-
-      await handleUserAuth(response);
-      setIsAccountCreating(false);
-    } catch (error) {
-      console.log(error.response?.data);
-      setIsAccountCreating(false);
-      AlertMain('There was an error while signning up, please reatry again later!');
-    }
-  }, [setIsAccountCreating, accountType, handleUserAuth, getGoogleToken]);
-
-  const goBack = () => {
-    if (step === 2) setStep(1);
-    else navigation.navigate('SignIn');
-  };
-
-  let googleButtonStyles = styles.googleButton;
-
-  if (Platform.OS === 'android') {
-    googleButtonStyles = {
-      ...styles.googleButton,
-      ...styles.googleButtonAndroid,
-    };
-  }
+  const goBack = () => navigation.navigate('SignIn');
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -294,124 +154,97 @@ export const SignUpScreen = () => {
             </View>
 
             <Text style={styles.heroTitle}>Create your account</Text>
-            <Text style={styles.heroSubtitle}>
-              A clean, elegant start for venues, vendors, and clients.
-            </Text>
+            <Text style={styles.heroSubtitle}>Create your customer account directly in the app.</Text>
           </View>
 
-          {step === 1 ? (
-            <View style={styles.card}>
-              <View style={styles.cardGlow} />
+          <View style={styles.card}>
+            <View style={styles.cardGlow} />
 
-              <Text style={styles.title}>Choose how you’ll use the app</Text>
-              <Text style={styles.subtitle}>
-                Select the type of account that fits you best.
-              </Text>
+            <Text style={styles.title}>Create your account</Text>
+            <Text style={styles.meta}>
+              Account type: <Text style={styles.metaStrong}>Client</Text>
+            </Text>
 
-              <View style={styles.typeGrid}>
-                <TypeCard
-                  title="I'm a Venue Owner"
-                  desc="Create and manage event spaces"
-                  emoji="🏢"
-                  selected={accountType === 2}
-                  onPress={() => handleTypeSelect(2)}
-                />
-
-                <TypeCard
-                  title="I'm a Vendor"
-                  desc="Offer event-related services"
-                  emoji="💼"
-                  selected={accountType === 3}
-                  onPress={() => handleTypeSelect(3)}
-                />
-
-                <TypeCard
-                  title="I'm a Client"
-                  desc="Plan and book your events"
-                  emoji="🎉"
-                  selected={accountType === 5}
-                  onPress={() => handleTypeSelect(5)}
-                />
-              </View>
-
-              <Text style={styles.linkCentered} onPress={() => navigation.navigate('SignIn')}>
-                Already have an account? <Text style={styles.link}>Back to Sign in</Text>
-              </Text>
+            <View style={styles.separator}>
+              <View style={styles.line} />
+              <View style={styles.separatorDot} />
+              <View style={styles.line} />
             </View>
-          ) : (
-            <View style={styles.card}>
-              <View style={styles.cardGlow} />
 
-              <Text style={styles.title}>Finish creating your account</Text>
-              <Text style={styles.meta}>
-                Account type:{' '}
-                <Text style={styles.metaStrong}>
-                  {accountType === 2 ? 'Venue Owner' : accountType === 3 ? 'Vendor' : 'Client'}
-                </Text>
-              </Text>
+            <Text style={styles.orText}>Continue with your details</Text>
 
-              <View style={styles.socialRow}>
-                {GoogleSignin && (
-                  <TouchableOpacity
-                    style={googleButtonStyles}
-                    onPress={() => handleGoogleRegister()}
-                    activeOpacity={0.9}
-                  >
-                    <AntDesign name="google" size={18} color="#6b7280" style={{ marginRight: 8 }} />
-                    <Text style={styles.googleText}>Google</Text>
-                  </TouchableOpacity>
-                )}
-
-                <AppleSignIn
-                  onSignIn={handleIosRegister}
-                  onError={() => AlertMain("Can't sign in with Apple")}
-                />
-              </View>
-
-              <View style={styles.separator}>
-                <View style={styles.line} />
-                <View style={styles.separatorDot} />
-                <View style={styles.line} />
-              </View>
-
-              <Text style={styles.orText}>Or continue with your details</Text>
-
-              <View style={styles.formRow}>
+            <View style={styles.formRow}>
                 <Text style={styles.label}>First name</Text>
                 <View style={styles.inputWrap}>
-                  <CustomInput placeHolder="Name" value={name} onChange={setName} />
+                  <CustomInput
+                    placeHolder="Name"
+                    value={name}
+                    onChange={setName}
+                    inputStyle={styles.customInputLight}
+                    placeholderTextColor="#8b7a69"
+                    iconColor="#8b7a69"
+                  />
                 </View>
               </View>
 
-              <View style={styles.formRow}>
+            <View style={styles.formRow}>
                 <Text style={styles.label}>Last name</Text>
                 <View style={styles.inputWrap}>
-                  <CustomInput placeHolder="Last Name" value={lastname} onChange={setLastname} />
+                  <CustomInput
+                    placeHolder="Last Name"
+                    value={lastname}
+                    onChange={setLastname}
+                    inputStyle={styles.customInputLight}
+                    placeholderTextColor="#8b7a69"
+                    iconColor="#8b7a69"
+                  />
                 </View>
               </View>
 
-              <View style={styles.formRow}>
+            <View style={styles.formRow}>
                 <Text style={styles.label}>Email</Text>
                 <View style={styles.inputWrap}>
-                  <CustomInput placeHolder="Email" value={email} onChange={setEmail} />
+                  <CustomInput
+                    placeHolder="Email"
+                    value={email}
+                    onChange={setEmail}
+                    inputStyle={styles.customInputLight}
+                    placeholderTextColor="#8b7a69"
+                    iconColor="#8b7a69"
+                  />
                 </View>
               </View>
 
-              <View style={styles.formRow}>
+            <View style={styles.formRow}>
                 <Text style={styles.label}>Phone number</Text>
                 <View style={styles.inputWrap}>
-                  <CustomInput placeHolder="Phone Number" value={phoneNumber} onChange={setPhoneNumber} />
+                  <CustomInput
+                    placeHolder="Phone Number"
+                    value={phoneNumber}
+                    onChange={setPhoneNumber}
+                    inputStyle={styles.customInputLight}
+                    placeholderTextColor="#8b7a69"
+                    iconColor="#8b7a69"
+                  />
                 </View>
               </View>
 
-              <View style={styles.formRow}>
+            <View style={styles.formRow}>
                 <Text style={styles.label}>Password</Text>
                 <View style={styles.inputWrap}>
-                  <CustomInput placeHolder="Password" value={password} onChange={setPassword} isSecured />
+                  <CustomInput
+                    placeHolder="Password"
+                    value={password}
+                    onChange={setPassword}
+                    isSecured
+                    inputStyle={styles.customInputLight}
+                    placeholderTextColor="#8b7a69"
+                    iconColor="#8b7a69"
+                  />
                 </View>
               </View>
 
-              <View style={styles.formRow}>
+            <View style={styles.formRow}>
                 <Text style={styles.label}>Confirm password</Text>
                 <View style={styles.inputWrap}>
                   <CustomInput
@@ -419,11 +252,14 @@ export const SignUpScreen = () => {
                     value={passwordConfirmation}
                     onChange={setPasswordConfirmation}
                     isSecured
+                    inputStyle={styles.customInputLight}
+                    placeholderTextColor="#8b7a69"
+                    iconColor="#8b7a69"
                   />
                 </View>
               </View>
 
-              <View style={styles.buttonGroup}>
+            <View style={styles.buttonGroup}>
                 <CustonButton
                   text="Create Account"
                   onPress={handleRegister}
@@ -432,42 +268,15 @@ export const SignUpScreen = () => {
                 />
               </View>
 
-              <View style={styles.buttonGroupSecondary}>
+            <View style={styles.buttonGroupSecondary}>
                 <CustonButton text="Back" onPress={goBack} type="Tertiary" />
               </View>
-            </View>
-          )}
+          </View>
         </ScrollView>
-
-        <LoadingOverlay visible={isAccountCreating} />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
-
-const TypeCard = ({ title, desc, emoji, selected, onPress }) => (
-  <TouchableOpacity
-    onPress={onPress}
-    activeOpacity={0.92}
-    style={[
-      styles.typeCard,
-      selected && styles.typeCardSelected,
-    ]}
-  >
-    <View style={[styles.typeEmojiWrap, selected && styles.typeEmojiWrapSelected]}>
-      <Text style={styles.typeEmoji}>{emoji}</Text>
-    </View>
-
-    <Text style={styles.typeTitle}>{title}</Text>
-    <Text style={styles.typeDesc}>{desc}</Text>
-
-    <View style={[styles.typePill, selected && styles.typePillSelected]}>
-      <Text style={[styles.typePillText, selected && styles.typePillTextSelected]}>
-        {selected ? 'Selected' : 'Choose'}
-      </Text>
-    </View>
-  </TouchableOpacity>
-);
 
 const styles = StyleSheet.create({
   safe: {
@@ -784,6 +593,16 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: 16,
     overflow: 'hidden',
+  },
+
+  customInputLight: {
+    backgroundColor: '#fffaf5',
+    borderColor: 'rgba(190, 160, 130, 0.35)',
+    color: '#24160b',
+    borderRadius: 18,
+    height: 58,
+    paddingLeft: 16,
+    paddingRight: 48,
   },
 
   buttonGroup: {

@@ -379,15 +379,14 @@ const loginUrl = `${BASE}api/auth/login`;
                   </Text>
                 </TouchableOpacity>
 
-                {/*
                 <TouchableOpacity
                   activeOpacity={0.9}
                   onPress={() => navigation.navigate('SignUp')}
-                  style={styles.secondaryButton}
+                  style={styles.registerCta}
                 >
-                  <Text style={styles.secondaryButtonText}>Create Account</Text>
+                  <Text style={styles.registerTextMuted}>Don&apos;t have an account? </Text>
+                  <Text style={styles.registerTextStrong}>Create account</Text>
                 </TouchableOpacity>
-                */}
               </View>
 
               <View style={styles.footerHint}>
@@ -736,6 +735,27 @@ const styles = StyleSheet.create({
 
   primaryButtonTextDisabled: {
     color: '#5b4632',
+  },
+
+  registerCta: {
+    marginTop: 14,
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 6,
+  },
+
+  registerTextMuted: {
+    color: '#7f6a55',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+
+  registerTextStrong: {
+    color: '#c87400',
+    fontSize: 13,
+    fontWeight: '900',
   },
 
   footerHint: {

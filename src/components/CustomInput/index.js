@@ -3,19 +3,28 @@ import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { colors } from "../../theme/colors";
 
-export default function CustomInput({ value, onChange, placeHolder, isSecured }) {
+export default function CustomInput({
+  value,
+  onChange,
+  placeHolder,
+  isSecured,
+  inputStyle,
+  wrapperStyle,
+  placeholderTextColor,
+  iconColor,
+}) {
   const [showPassword, setShowPassword] = useState(false);
   const isPasswordVisible = isSecured && !showPassword;
 
   return (
-    <View style={styles.wrapper}>
+    <View style={[styles.wrapper, wrapperStyle]}>
       <TextInput
         value={value}
         onChangeText={onChange}
         placeholder={placeHolder}
-        placeholderTextColor={colors.textMuted}
+        placeholderTextColor={placeholderTextColor || colors.textMuted}
         secureTextEntry={isPasswordVisible}
-        style={styles.input}
+        style={[styles.input, inputStyle]}
       />
       {isSecured && (
         <TouchableOpacity
@@ -26,7 +35,7 @@ export default function CustomInput({ value, onChange, placeHolder, isSecured })
           <MaterialIcons
             name={showPassword ? "visibility-off" : "visibility"}
             size={22}
-            color={colors.textMuted}
+            color={iconColor || colors.textMuted}
           />
         </TouchableOpacity>
       )}
