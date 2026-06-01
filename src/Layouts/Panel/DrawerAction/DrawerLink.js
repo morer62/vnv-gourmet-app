@@ -1,4 +1,3 @@
-import { API_URL } from '@env';
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
@@ -8,6 +7,7 @@ import { Text, View } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 
 // local imports
+import { buildTokenWebViewUrl } from '../../../config/apiRoutes';
 import styles from './styles';
 
 function DrawerLink({ item }) {
@@ -30,9 +30,9 @@ function DrawerLink({ item }) {
 
     // Navegación externa
     const token = await AsyncStorage.getItem('Token');
-    const openUrl = `${API_URL}Panel/Tokenapi/${token}/${url}`;
+    const openUrl = buildTokenWebViewUrl(token, url);
     await WebBrowser.openBrowserAsync(openUrl);
-  }, [callback, url]);
+  }, [callback, navigation, url]);
 
   return (
     <View style={styles.drawer_link_container}>

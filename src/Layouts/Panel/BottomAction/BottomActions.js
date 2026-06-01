@@ -1,10 +1,10 @@
-import { API_URL } from '@env';
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import * as WebBrowser from 'expo-web-browser';
 import { useCallback, useMemo } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { buildTokenWebViewUrl, WEBVIEW_ROUTES } from '../../../config/apiRoutes';
 import { useUserContext } from '../../../context/userContext';
 import getUUID from '../../../utils/uuid';
 
@@ -13,12 +13,19 @@ export default function BottomAction() {
   const route = useRoute();
   const { userData } = useUserContext();
 
-  const level = Number(userData?.level || 5);
+  const requestedLevel = Number(userData?.level || 5);
+  const level = [1, 4, 5].includes(requestedLevel) ? requestedLevel : 5;
 
   const ordersUrl = useMemo(() => {
-    if (level === 5) return 'panel/store/orders/home';
-    if (level === 4) return 'panel/planner-hub/team/store/orders/home';
-    return 'panel/planner-hub/store/orders/home';
+    if (level === 5) return WEBVIEW_ROUTES.customerOrders;
+    if (level === 4) return WEBVIEW_ROUTES.teamStoreOrders;
+    return WEBVIEW_ROUTES.adminStoreOrders;
+  }, [level]);
+
+  const shopUrl = useMemo(() => {
+    if (level === 4) return WEBVIEW_ROUTES.teamMyWork;
+    if (level === 1) return WEBVIEW_ROUTES.adminStoreOrders;
+    return WEBVIEW_ROUTES.storeHome;
   }, [level]);
 
   const isActive = useCallback(
@@ -43,12 +50,12 @@ export default function BottomAction() {
         callback: () => navigation.navigate('Panel')
       },
       {
-        icon: 'settings',
+        icon: level === 5 ? 'restaurant-menu' : 'work',
         screenName: 'PanelView',
-        url: 'panel/settings',
+        url: shopUrl,
         callback: () =>
           navigation.navigate('PanelView', {
-            url: 'panel/settings',
+            url: shopUrl,
             key: getUUID()
           })
       },
@@ -59,6 +66,16 @@ export default function BottomAction() {
         callback: () =>
           navigation.navigate('PanelView', {
             url: ordersUrl,
+            key: getUUID()
+          })
+      },
+      {
+        icon: 'settings',
+        screenName: 'PanelView',
+        url: WEBVIEW_ROUTES.customerSettings,
+        callback: () =>
+          navigation.navigate('PanelView', {
+            url: WEBVIEW_ROUTES.customerSettings,
             key: getUUID()
           })
       },
@@ -81,7 +98,7 @@ export default function BottomAction() {
         }
       }
     ],
-    [navigation, ordersUrl]
+    [level, navigation, ordersUrl, shopUrl]
   );
 
   const actionUrl = useCallback(async ({ callback, url }) => {
@@ -90,7 +107,7 @@ export default function BottomAction() {
     }
 
     const token = await AsyncStorage.getItem('Token');
-    const openUrl = `${API_URL}Panel/Tokenapi/${token}/${url}`;
+    const openUrl = buildTokenWebViewUrl(token, url);
     await WebBrowser.openBrowserAsync(openUrl);
   }, []);
 

@@ -20,6 +20,7 @@ expo-env.d.ts
 
 # Metro
 .metro-health-check*
+.expo-avomeal.*.log
 
 # debug
 npm-debug.*
@@ -41,6 +42,7 @@ android/
 .idea
 .env
 .env.*
+!.env.example
 GoogleService-Info.plist
 
 # Firebase Admin / FCM service account (secret; upload only via Expo/EAS, never commit)

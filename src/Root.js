@@ -80,7 +80,7 @@ export default function Root() {
         clearTimeout(introTimer);
       }
     };
-  }, []);
+  }, [clientVersion]);
 
   if (showIntro) {
     return (

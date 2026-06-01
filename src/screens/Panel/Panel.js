@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-unresolved
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
 import { useNavigation } from "@react-navigation/native";
@@ -32,6 +31,8 @@ import Icon8 from "../../../assets/images/icons_website/icon_8.png";
 import Icon9 from "../../../assets/images/icons_website/icon_9.png";
 
 import LoadingOverlay from "../../components/LoadingOverlay";
+import { WEBVIEW_ROUTES } from "../../config/apiRoutes";
+import { BUSINESS_CONFIG } from "../../config/businessConfig";
 import QuestionAlert from "../../components/QuestionAlert";
 import { useUserContext } from "../../context/userContext";
 import changeAccountType from "../../http/changeAccountType";
@@ -41,9 +42,6 @@ import sleep from "../../utils/sleep";
 import getUUID from "../../utils/uuid";
 
 const accountTypes = [
-  { value: 2, label: "venue account" },
-  { value: 3, label: "service account" },
-  { value: 4, label: "team member account" },
   { value: 5, label: "client account" },
 ];
 
@@ -73,9 +71,9 @@ function getIconByIndex(index) {
 function getPanelConfig(level) {
   const ownerPrimary = [
     {
-      label: "Orders",
-      description: "Review store activity and operational flow.",
-      url: "panel/planner-hub/store/orders/home",
+      label: "Store Orders",
+      description: "Open Avomeal order operations in the backend workspace.",
+      url: WEBVIEW_ROUTES.adminStoreOrders,
     },
     {
       label: "Products",
@@ -92,7 +90,7 @@ function getPanelConfig(level) {
   const ownerSecondary = [
     {
       label: "View Store",
-      url: "meal-plans",
+      url: WEBVIEW_ROUTES.storeHome,
     },
     {
       label: "Chat",
@@ -111,92 +109,87 @@ function getPanelConfig(level) {
   const teamPrimary = [
     {
       label: "Store Orders",
-      description: "Review operational orders and team workflow.",
-      url: "panel/planner-hub/team/store/orders/home",
+      description: "Review assigned Avomeal preparation and delivery work.",
+      url: WEBVIEW_ROUTES.teamStoreOrders,
     },
     {
       label: "Track Time",
       description: "Clock in and out and keep work hours organized.",
-      url: "panel/planner-hub/team/payroll/clock",
+      url: WEBVIEW_ROUTES.teamClock,
     },
     {
-      label: "Payroll",
-      description: "Review pending payments and compensation.",
-      url: "panel/planner-hub/team/payroll/pending",
+      label: "My Work",
+      description: "Open your current store tasks and assignments.",
+      url: WEBVIEW_ROUTES.teamMyWork,
     },
   ];
 
   const teamSecondary = [
     {
-      label: "Banking",
-      url: "panel/planner-hub/team/payments",
-    },
-    {
       label: "Chat",
-      url: "panel/planner-hub/team/chat",
+      url: WEBVIEW_ROUTES.teamChat,
     },
     {
-      label: "Inventory",
-      url: "panel/planner-hub/team/storage",
-    },
-    {
-      label: "CRM",
-      url: "panel/planner-hub/management/crm",
+      label: "Clock",
+      url: WEBVIEW_ROUTES.teamClock,
     },
     {
       label: "Settings",
-      url: "panel/settings",
+      url: WEBVIEW_ROUTES.customerSettings,
     },
   ];
 
   const clientPrimary = [
-  
-  {
-    label: "Nutrition Advisor",
-    description: "Use the nutrition calculator and get practical guidance.",
-    url: "panel/store/nutrition-advisor",
-  },
-  {
-    label: "Wellness Advisor",
-    description: "Explore wellness tools and personalized support.",
-    url: "panel/store/wellness-advisor",
-  },
-  {
-    label: "My Subscription",
-    description: "Manage your plan and weekly charges.",
-    url: "panel/store/subscriptions/home",
-  },
-  {
-    label: "Order Again",
-    description: "Return to the store and start a new order.",
-    url: "meal-plans",
-  },
-];
+    {
+      label: "Shop Meals",
+      description: "Open Avomeal products and start a fresh order.",
+      url: WEBVIEW_ROUTES.storeHome,
+    },
+    {
+      label: "Reorder",
+      description: "Review previous orders before adding items again.",
+      url: WEBVIEW_ROUTES.reorder,
+    },
+    {
+      label: "My Orders",
+      description: "See recent orders, status and purchase history.",
+      url: WEBVIEW_ROUTES.customerOrders,
+    },
+    {
+      label: "Subscriptions",
+      description: "Manage active meal subscriptions if available.",
+      url: WEBVIEW_ROUTES.subscriptions,
+    },
+  ];
 
   const clientSecondary = [
     {
       label: "Nutrition Advisor",
-      url: "panel/store/nutrition-advisor",
+      url: WEBVIEW_ROUTES.nutritionAdvisor,
     },
     {
       label: "Wellness Advisor",
-      url: "panel/store/wellness-advisor",
+      url: WEBVIEW_ROUTES.wellnessAdvisor,
+    },
+    {
+      label: "Cart",
+      url: WEBVIEW_ROUTES.cart,
     },
     {
       label: "Settings",
-      url: "panel/settings",
+      url: WEBVIEW_ROUTES.customerSettings,
     },
   ];
 
   const configByLevel = {
     1: {
-      badge: "VNV Gourmet Admin",
-      title: "Run the store from one clean dashboard.",
+      badge: `${BUSINESS_CONFIG.brandName} Admin`,
+      title: "Run the Avomeal store from one clean dashboard.",
       subtitle:
         "Manage catalog, monitor orders, and control customers and team access from a simpler operation panel.",
       heroLabel: "Orders",
       heroDescription: "Open the main store order area and manage daily activity.",
-      heroUrl: "panel/planner-hub/store/orders/home",
+      heroUrl: WEBVIEW_ROUTES.adminStoreOrders,
       heroButton: "Open Orders",
       primary: ownerPrimary,
       secondary: ownerSecondary,
@@ -206,20 +199,20 @@ function getPanelConfig(level) {
       exploreSubtitle: "Useful secondary areas without overloading the main dashboard.",
       finalTitle: "Keep the operation clean",
       finalText:
-        "Use these areas as the main control points for products, orders, and people inside VNV Gourmet.",
+        `Use these areas as the main control points for products, orders, and people inside ${BUSINESS_CONFIG.brandName}.`,
       finalPrimaryButton: "Go to Orders",
-      finalPrimaryUrl: "panel/planner-hub/store/orders/home",
+      finalPrimaryUrl: WEBVIEW_ROUTES.adminStoreOrders,
       finalSecondaryButton: "Manage Products",
       finalSecondaryUrl: "panel/planner-hub/store/products/home",
     },
     2: {
-      badge: "VNV Gourmet Admin",
-      title: "Run the store from one clean dashboard.",
+      badge: `${BUSINESS_CONFIG.brandName} Admin`,
+      title: "Run the Avomeal store from one clean dashboard.",
       subtitle:
         "Manage catalog, monitor orders, and control customers and team access from a simpler operation panel.",
       heroLabel: "Orders",
       heroDescription: "Open the main store order area and manage daily activity.",
-      heroUrl: "panel/planner-hub/store/orders/home",
+      heroUrl: WEBVIEW_ROUTES.adminStoreOrders,
       heroButton: "Open Orders",
       primary: ownerPrimary,
       secondary: ownerSecondary,
@@ -229,20 +222,20 @@ function getPanelConfig(level) {
       exploreSubtitle: "Useful secondary areas without overloading the main dashboard.",
       finalTitle: "Keep the operation clean",
       finalText:
-        "Use these areas as the main control points for products, orders, and people inside VNV Gourmet.",
+        `Use these areas as the main control points for products, orders, and people inside ${BUSINESS_CONFIG.brandName}.`,
       finalPrimaryButton: "Go to Orders",
-      finalPrimaryUrl: "panel/planner-hub/store/orders/home",
+      finalPrimaryUrl: WEBVIEW_ROUTES.adminStoreOrders,
       finalSecondaryButton: "Manage Products",
       finalSecondaryUrl: "panel/planner-hub/store/products/home",
     },
     3: {
-      badge: "VNV Gourmet Admin",
-      title: "Run the store from one clean dashboard.",
+      badge: `${BUSINESS_CONFIG.brandName} Admin`,
+      title: "Run the Avomeal store from one clean dashboard.",
       subtitle:
         "Manage catalog, monitor orders, and control customers and team access from a simpler operation panel.",
       heroLabel: "Orders",
       heroDescription: "Open the main store order area and manage daily activity.",
-      heroUrl: "panel/planner-hub/store/orders/home",
+      heroUrl: WEBVIEW_ROUTES.adminStoreOrders,
       heroButton: "Open Orders",
       primary: ownerPrimary,
       secondary: ownerSecondary,
@@ -252,21 +245,21 @@ function getPanelConfig(level) {
       exploreSubtitle: "Useful secondary areas without overloading the main dashboard.",
       finalTitle: "Keep the operation clean",
       finalText:
-        "Use these areas as the main control points for products, orders, and people inside VNV Gourmet.",
+        `Use these areas as the main control points for products, orders, and people inside ${BUSINESS_CONFIG.brandName}.`,
       finalPrimaryButton: "Go to Orders",
-      finalPrimaryUrl: "panel/planner-hub/store/orders/home",
+      finalPrimaryUrl: WEBVIEW_ROUTES.adminStoreOrders,
       finalSecondaryButton: "Manage Products",
       finalSecondaryUrl: "panel/planner-hub/store/products/home",
     },
     4: {
       badge: "Team Dashboard",
-      title: "Stay on top of daily operational work.",
+      title: "Keep Avomeal orders moving.",
       subtitle:
-        "Access store orders, track time, review payroll, and move through your team workflow with less friction.",
-      heroLabel: "Track Time",
-      heroDescription: "Clock in and out quickly from the main dashboard.",
-      heroUrl: "panel/planner-hub/team/payroll/clock",
-      heroButton: "Clock In / Out",
+        "Open assigned orders, clock in, and stay aligned with store operations.",
+      heroLabel: "Store Orders",
+      heroDescription: "Open assigned preparation and delivery work.",
+      heroUrl: WEBVIEW_ROUTES.teamStoreOrders,
+      heroButton: "Open Orders",
       primary: teamPrimary,
       secondary: teamSecondary,
       sectionTitle: "Main Areas",
@@ -277,32 +270,32 @@ function getPanelConfig(level) {
       finalText:
         "Stay focused on store work, time tracking, payroll, and daily operational support.",
       finalPrimaryButton: "Open Store Orders",
-      finalPrimaryUrl: "panel/planner-hub/team/store/orders/home",
+      finalPrimaryUrl: WEBVIEW_ROUTES.teamStoreOrders,
       finalSecondaryButton: "Track Time",
-      finalSecondaryUrl: "panel/planner-hub/team/payroll/clock",
+      finalSecondaryUrl: WEBVIEW_ROUTES.teamClock,
     },
     5: {
-      badge: "VNV Gourmet",
-      title: "Your meals, wellness tools and orders are all here.",
+      badge: BUSINESS_CONFIG.brandName,
+      title: "Shop, reorder and manage your meals faster.",
       subtitle:
-        "Review your orders, manage your subscription, explore nutrition guidance, and keep a more human wellness routine.",
-      heroLabel: "My Orders",
-      heroDescription: "Review order history and manage your purchases.",
-      heroUrl: "panel/store/orders/home",
-      heroButton: "Open Orders",
+        "Jump straight into products, recent orders, subscriptions and nutrition tools.",
+      heroLabel: "Shop Meals",
+      heroDescription: "Open the Avomeal store and build your next order.",
+      heroUrl: WEBVIEW_ROUTES.storeHome,
+      heroButton: "Start Order",
       primary: clientPrimary,
       secondary: clientSecondary,
       sectionTitle: "Main Areas",
-      sectionSubtitle: "What you will use most as a customer.",
-      exploreTitle: "Wellness & More",
-      exploreSubtitle: "The extra tools that make the app more valuable.",
+      sectionSubtitle: "Fast access to ordering, reordering and account actions.",
+      exploreTitle: "Tools & Account",
+      exploreSubtitle: "Nutrition tools, cart and profile access.",
       finalTitle: "Ready for your next order?",
       finalText:
-        "Choose your meals, support your wellness goals, and keep your week easier with VNV Gourmet.",
+        `Choose your meals, support your wellness goals, and keep your week easier with ${BUSINESS_CONFIG.brandName}.`,
       finalPrimaryButton: "Start New Order",
-      finalPrimaryUrl: "meal-plans",
-      finalSecondaryButton: "Explore Wellness",
-      finalSecondaryUrl: "panel/store/wellness-advisor",
+      finalPrimaryUrl: WEBVIEW_ROUTES.storeHome,
+      finalSecondaryButton: "Reorder",
+      finalSecondaryUrl: WEBVIEW_ROUTES.reorder,
     },
   };
 
@@ -320,7 +313,8 @@ export function Panel() {
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [changinAccountOnProgress, setChanginAccountOnProgress] = useState(false);
 
-  const level = Number(userData?.level || 5);
+  const requestedLevel = Number(userData?.level || 5);
+  const level = [1, 4, 5].includes(requestedLevel) ? requestedLevel : 5;
   const panelConfig = getPanelConfig(level);
 
   const onChangeAccountConfirm = useCallback(async () => {

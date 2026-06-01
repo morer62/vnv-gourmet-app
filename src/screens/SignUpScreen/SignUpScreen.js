@@ -1,4 +1,3 @@
-import { API_URL } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
@@ -11,12 +10,13 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomInput from '../../components/CustomInput';
 import { CustonButton } from '../../components/CustonButton/CustonButton';
+import { API_ROUTES, getApiUrl } from '../../config/apiRoutes';
+import { BUSINESS_CONFIG, withBusinessScope } from '../../config/businessConfig';
 import { useUserContext } from '../../context/userContext';
 import AlertMain from '../../utils/AlertMain';
 
@@ -36,7 +36,6 @@ const SHADOW = {
   elevation: 10,
 };
 
-const BASE = API_URL?.endsWith('/') ? API_URL : `${API_URL}/`;
 const APP_SIGNUP_LEVEL = '5';
 
 export const SignUpScreen = () => {
@@ -53,8 +52,10 @@ export const SignUpScreen = () => {
   const [TypeButton, setTypeButton] = useState('Primary');
 
   const signupUrl = useMemo(() => {
-    const base = API_URL?.endsWith('/') ? API_URL : `${API_URL || ''}/`;
-    return `${base}api/auth/signup`;
+    return getApiUrl(API_ROUTES.signup);
+  }, []);
+  const loginUrl = useMemo(() => {
+    return getApiUrl(API_ROUTES.login);
   }, []);
 
   const notify = useCallback((message) => {
@@ -65,10 +66,47 @@ export const SignUpScreen = () => {
     }
   }, []);
 
+  const completeAuth = useCallback(async (token, user) => {
+    await AsyncStorage.setItem('Token', token);
+    await AsyncStorage.setItem('UserData', JSON.stringify(user));
+    setUserData(user);
+    notify('Account created successfully.');
+    setTimeout(() => {
+      navigation.navigate('panelNavigator', { screen: 'Panel' });
+    }, 250);
+  }, [navigation, notify, setUserData]);
+
+  const autoLogin = useCallback(async () => {
+    const formBody = new URLSearchParams(withBusinessScope({
+      email: email.trim(),
+      password,
+      expo_token: '',
+      source: 'avomeal_mobile_app',
+    })).toString();
+
+    const response = await axios.post(loginUrl, formBody, {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      timeout: 15000,
+      validateStatus: () => true,
+    });
+
+    const token = response.data?.data?.token || response.data?.token;
+    const user = response.data?.data?.user || response.data?.user;
+
+    if (!response.data?.success || !token || !user) {
+      throw new Error(
+        response.data?.message ||
+          'The account was created, but automatic sign in failed. Please sign in with your email and password.'
+      );
+    }
+
+    await completeAuth(token, user);
+  }, [completeAuth, email, loginUrl, password]);
+
   const handleRegister = async () => {
     Keyboard.dismiss();
 
-    if (!name || !lastname || !email || !password || !passwordConfirmation) {
+    if (!name.trim() || !lastname.trim() || !email.trim() || !password || !passwordConfirmation) {
       return notify('Please fill out all fields');
     }
     if (password !== passwordConfirmation) {
@@ -79,15 +117,16 @@ export const SignUpScreen = () => {
     setTypeButton('Disabled');
 
     try {
-      const formBody = new URLSearchParams({
-        name,
-        lastname,
-        email,
-        phone: phoneNumber,
+      const formBody = new URLSearchParams(withBusinessScope({
+        name: name.trim(),
+        lastname: lastname.trim(),
+        email: email.trim(),
+        phone: phoneNumber.trim(),
         password,
         passwordConfirmation,
         level: APP_SIGNUP_LEVEL,
-      }).toString();
+        source: 'avomeal_mobile_app',
+      })).toString();
 
       const { data } = await axios.post(signupUrl, formBody, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -102,20 +141,17 @@ export const SignUpScreen = () => {
         (success ? 'Account created successfully.' : 'Signup failed');
 
       if (success) {
-        if (token && user) {
-          await AsyncStorage.setItem('Token', token);
-          await AsyncStorage.setItem('UserData', JSON.stringify(user));
-          setUserData(user);
-          notify('Account created successfully.');
-          setTimeout(() => {
-            navigation.navigate('panelNavigator', { screen: 'Panel' });
-          }, 250);
+        if (user && Number(user.level) !== 5) {
+          notify('This app creates customer accounts only. Please contact support if you need a different account type.');
           return;
         }
-        notify('Account created successfully. Please log in.');
-        setTimeout(() => {
-          navigation.reset({ index: 0, routes: [{ name: 'SignIn' }] });
-        }, 300);
+
+        if (token && user) {
+          await completeAuth(token, user);
+          return;
+        }
+
+        await autoLogin();
       } else {
         notify(message);
       }
@@ -150,7 +186,7 @@ export const SignUpScreen = () => {
         >
           <View style={styles.heroBlock}>
             <View style={styles.badge}>
-              <Text style={styles.badgeText}>VNV Events</Text>
+              <Text style={styles.badgeText}>{BUSINESS_CONFIG.brandName}</Text>
             </View>
 
             <Text style={styles.heroTitle}>Create your account</Text>

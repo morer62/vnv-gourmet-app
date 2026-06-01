@@ -4,6 +4,8 @@ import { useNavigation } from '@react-navigation/native'
 import { useMemo } from 'react'
 import { StyleSheet, View } from 'react-native'
  
+import { WEBVIEW_ROUTES } from '../../../config/apiRoutes'
+import { BUSINESS_CONFIG } from '../../../config/businessConfig'
 import DrawerLink from './DrawerLink'
 import DrawerTitle from './DrawerTitle'
 
@@ -21,13 +23,13 @@ export default function DrawerAction() {
       icon: 'settings',
       color: '#0fb58d',
       label: 'Settings',
-      callback: () => navigation.navigate('PanelView', { url: 'private/Settings' })
+      callback: () => navigation.navigate('PanelView', { url: WEBVIEW_ROUTES.customerSettings })
     },
     {
       icon: 'language',
       color: '#0fb58d',
-      label: 'VNVEvents.com',
-      callback: () => navigation.navigate('PanelView', { url: 'https://vnvevents.com' })
+      label: `${BUSINESS_CONFIG.brandName}.com`,
+      callback: () => navigation.navigate('PanelView', { url: BUSINESS_CONFIG.webBaseUrl })
     },
     {
       icon: 'exit-to-app',

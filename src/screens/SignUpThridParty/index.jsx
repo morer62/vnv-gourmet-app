@@ -1,180 +1,137 @@
-import { API_URL } from '@env';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import axios from 'axios';
+import { useCallback, useState } from 'react';
 import {
   StyleSheet,
   Text,
   TouchableOpacity,
   View
 } from 'react-native';
-
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import axios from 'axios';
-import { useCallback, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LoadingOverlay from '../../components/LoadingOverlay';
+import { API_ROUTES, getApiUrl } from '../../config/apiRoutes';
+import { BUSINESS_CONFIG, withBusinessScope } from '../../config/businessConfig';
 import { useUserContext } from '../../context/userContext';
 import AlertMain from '../../utils/AlertMain';
 import sleep from '../../utils/sleep';
 
-const BASE = API_URL?.endsWith('/') ? API_URL : `${API_URL}/`;
-
 export default function SignUpThridParty() {
+  const [isAccountCreating, setIsAccountCreating] = useState(false);
+  const route = useRoute();
+  const { value, type } = route.params || {};
+  const { setUserData } = useUserContext();
+  const navigation = useNavigation();
 
+  const handleUserAuth = useCallback(async (response) => {
+    const { token, user } = response.data?.data || response.data || {};
 
-    const [isAccountCreating, setIsaccountCreating] = useState(false)
-    const route = useRoute();
-    const { value, type } = route.params;
-    const { setUserData } = useUserContext()
-    const navigation = useNavigation()
-
-    const handleIosCreation = useCallback(async (accountType) => {
-
-        let payload = {
-            identityToken: value.identityToken,
-            accountType
-        }
-
-        return await axios.post(`${BASE}api/auth/apple-signing/client-app`, payload, {
-            headers: {
-                "Content-Type": "application/json"
-            }
-        })
-
-    }, [value])
-
-    const handleGoogleCreation = useCallback(async (accountType) => {
-        let payload = {
-            idToken: value,
-            accountType
-        }
-
-        return await axios.post(`${BASE}api/auth/google/signup-app`, payload, {
-            headers: {
-                "Content-Type": "application/json"
-            }
-        })
-    }, [value])
-
-    const handleAccountCreation = useCallback(async (accountType) => {
-
-        let timeStart = Date.now()
-        let response = null
-
-        try {
-
-            setIsaccountCreating(true)
-            switch (type) {
-                case "IOS":
-                    response = await handleIosCreation(accountType)    
-                    break;
-            
-                case "GOOGLE":
-                    response = await handleGoogleCreation(accountType)
-                    break;
-                default:
-                    throw new Error("Provider not found")
-            }
-
-            
-        } catch (e) {
-            console.log(e.response?.data)
-            setIsaccountCreating(false)
-            AlertMain("There was an error while signing up, please try later!")
-            return
-        } finally {
-            let elapsed = Date.now() - timeStart
-            let remaining = 2000 - elapsed
-
-            if (remaining > 0) {
-                await sleep(3)
-            }
-
-            console.log(response.data)
-
-            await handleUserAuth(response)
-            setIsaccountCreating(false)
-        }
-        
-    }, [type, setIsaccountCreating, handleUserAuth, handleGoogleCreation, handleIosCreation])
-
-    const handleUserAuth = useCallback(async (response) => {
-        try {
-
-            let  { token, user} = response.data.data
-
-            console.log(token, user)
-
-            await AsyncStorage.setItem('Token', token);
-            await AsyncStorage.setItem('UserData', JSON.stringify(user));
-            setUserData(user);
-
-            navigation.navigate('panelNavigator', { screen: 'Panel' })    
-        } catch (error) {
-            console.log(error)
-        }
-        
-    }, [setUserData, navigation])
-
-    if (!value || !type) {
-        return <></>
+    if (!token || !user) {
+      AlertMain('Account created. Please sign in.');
+      navigation.navigate('SignIn');
+      return;
     }
 
-    return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.card}>
-                <Text style={styles.title}>Create your account</Text>
-                <Text style={styles.subtitle}>
-                How would you like to use E‑Planner Hub?
-                </Text>
+    await AsyncStorage.setItem('Token', token);
+    await AsyncStorage.setItem('UserData', JSON.stringify(user));
+    setUserData(user);
+    navigation.navigate('panelNavigator', { screen: 'Panel' });
+  }, [navigation, setUserData]);
 
-                <View style={styles.typeGrid}>
-                    <TypeCard
-                        title="I'm a Venue Owner"
-                        desc="Create and manage event spaces"
-                        emoji="🏢"
-                        onPress={() => handleAccountCreation("venue")}
-                    />
-                    <TypeCard
-                        title="I'm a Vendor"
-                        desc="Offer event‑related services"
-                        emoji="💼"
-                        onPress={() => handleAccountCreation("vendor")}
-                    />
-                    <TypeCard
-                        title="I'm a Client"
-                        desc="Plan and book your events"
-                        emoji="🎉"
-                        onPress={() => handleAccountCreation("client")}
-                    />
-                </View>
+  const handleIosCreation = useCallback(async () => {
+    const payload = withBusinessScope({
+      identityToken: value.identityToken,
+      accountType: 'client',
+      level: '5',
+    });
 
-                <Text style={styles.linkCentered} onPress={() => navigation.navigate('SignIn')}>
-                Already have an account? <Text style={styles.link}>Back to Sign in</Text>
-                </Text>
-            </View>
+    return axios.post(getApiUrl(API_ROUTES.appleClientSignup), payload, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }, [value]);
 
+  const handleGoogleCreation = useCallback(async () => {
+    const payload = withBusinessScope({
+      idToken: value,
+      accountType: 'client',
+      level: '5',
+    });
 
-            <LoadingOverlay visible={isAccountCreating} />
-        </SafeAreaView>
-    )
+    return axios.post(getApiUrl(API_ROUTES.googleClientSignup), payload, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }, [value]);
+
+  const handleAccountCreation = useCallback(async () => {
+    const timeStart = Date.now();
+    let response = null;
+
+    try {
+      setIsAccountCreating(true);
+
+      switch (type) {
+        case 'IOS':
+          response = await handleIosCreation();
+          break;
+        case 'GOOGLE':
+          response = await handleGoogleCreation();
+          break;
+        default:
+          throw new Error('Provider not found');
+      }
+    } catch (error) {
+      console.log(error.response?.data || error.message);
+      AlertMain('There was an error while signing up. Please try later.');
+      return;
+    } finally {
+      const elapsed = Date.now() - timeStart;
+      const remaining = 2000 - elapsed;
+
+      if (remaining > 0) {
+        await sleep(3);
+      }
+
+      setIsAccountCreating(false);
+    }
+
+    await handleUserAuth(response);
+  }, [type, handleUserAuth, handleGoogleCreation, handleIosCreation]);
+
+  if (!value || !type) {
+    return <></>;
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.card}>
+        <Text style={styles.title}>Create your account</Text>
+        <Text style={styles.subtitle}>
+          Create your {BUSINESS_CONFIG.brandName} customer account.
+        </Text>
+
+        <View style={styles.typeGrid}>
+          <TouchableOpacity
+            onPress={handleAccountCreation}
+            activeOpacity={0.9}
+            style={styles.typeCard}
+          >
+            <Text style={styles.typeBadge}>{BUSINESS_CONFIG.brandName}</Text>
+            <Text style={styles.typeTitle}>Customer Account</Text>
+            <Text style={styles.typeDesc}>
+              Order meals, review purchases, and manage your subscription.
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <Text style={styles.linkCentered} onPress={() => navigation.navigate('SignIn')}>
+          Already have an account? <Text style={styles.link}>Back to Sign in</Text>
+        </Text>
+      </View>
+
+      <LoadingOverlay visible={isAccountCreating} />
+    </SafeAreaView>
+  );
 }
-
-const TypeCard = ({ title, desc, emoji, selected, onPress }) => (
-  <TouchableOpacity
-    onPress={onPress}
-    activeOpacity={0.9}
-    style={[
-      styles.typeCard,
-      selected && { borderColor: ACCENT, backgroundColor: '#f6fffb' },
-    ]}
-  >
-    <Text style={styles.typeEmoji}>{emoji}</Text>
-    <Text style={styles.typeTitle}>{title}</Text>
-    <Text style={styles.typeDesc}>{desc}</Text>
-  </TouchableOpacity>
-);
-
 
 const SHADOW = {
   shadowColor: '#000',
@@ -184,8 +141,7 @@ const SHADOW = {
   elevation: 8,
 };
 
-
-const ACCENT = '#0fb58d';
+const ACCENT = '#f59e0b';
 
 const styles = StyleSheet.create({
   container: {
@@ -193,12 +149,13 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    flex: 1
+    flex: 1,
+    backgroundColor: '#66371c',
   },
   card: {
     width: '100%',
     maxWidth: 600,
-    backgroundColor: '#fff',
+    backgroundColor: '#f7efe4',
     borderRadius: 16,
     padding: 20,
     ...SHADOW,
@@ -206,46 +163,44 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#111827',
+    color: '#24160b',
     textAlign: 'center',
     marginBottom: 6,
   },
   subtitle: {
     textAlign: 'center',
-    color: '#6b7280',
+    color: '#6f6255',
     marginBottom: 14,
-  },
-  meta: {
-    textAlign: 'center',
-    color: '#6b7280',
-    marginBottom: 16,
   },
   typeGrid: {
     gap: 12,
     marginBottom: 12,
   },
   typeCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#fffaf5',
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: '#ead8c3',
     alignItems: 'center',
     ...SHADOW,
     elevation: 2,
   },
-  typeEmoji: {
-    fontSize: 28,
-    marginBottom: 6,
+  typeBadge: {
+    color: ACCENT,
+    fontSize: 12,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    marginBottom: 8,
   },
   typeTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#111827',
+    color: '#24160b',
   },
   typeDesc: {
     fontSize: 13,
-    color: '#6b7280',
+    color: '#6f6255',
     textAlign: 'center',
     marginTop: 4,
   },

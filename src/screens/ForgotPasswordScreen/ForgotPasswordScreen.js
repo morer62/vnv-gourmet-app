@@ -1,4 +1,3 @@
-import { API_URL } from "@env";
 import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
 import { useState } from "react";
@@ -17,6 +16,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Logo from "../../../assets/images/icon_login.png";
+import { API_ROUTES, getApiUrl } from "../../config/apiRoutes";
+import { BUSINESS_CONFIG, withBusinessScope } from "../../config/businessConfig";
 
 export const ForgotPasswordScreen = () => {
   const navigation = useNavigation();
@@ -24,8 +25,6 @@ export const ForgotPasswordScreen = () => {
 
   const [email, setEmail] = useState("");
   const [isDisabled, setIsDisabled] = useState(false);
-
-  const BASE = API_URL?.endsWith("/") ? API_URL : `${API_URL}/`;
 
   const forgotPasswordPresed = async () => {
     if (!email) {
@@ -35,11 +34,14 @@ export const ForgotPasswordScreen = () => {
 
     setIsDisabled(true);
 
-    const formBody = new URLSearchParams({ email }).toString();
+    const formBody = new URLSearchParams(withBusinessScope({
+      email: email.trim(),
+      source: 'avomeal_mobile_app',
+    })).toString();
 
     try {
       const { data } = await axios.post(
-        `${BASE}api/auth/forgot-password`,
+        getApiUrl(API_ROUTES.forgotPassword),
         formBody,
         {
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -106,7 +108,7 @@ export const ForgotPasswordScreen = () => {
           <View style={styles.wrapper}>
             <View style={styles.heroBlock}>
               <View style={styles.badge}>
-                <Text style={styles.badgeText}>VNV Events</Text>
+                <Text style={styles.badgeText}>{BUSINESS_CONFIG.brandName}</Text>
               </View>
 
               <Image
@@ -128,7 +130,7 @@ export const ForgotPasswordScreen = () => {
 
               <Text style={styles.title}>Reset your password</Text>
               <Text style={styles.subtitle}>
-                Enter your registered email and we'll send you a reset link.
+                Enter your registered email and we&apos;ll send you a reset link.
               </Text>
 
               <View style={styles.separator}>

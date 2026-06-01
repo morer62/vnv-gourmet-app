@@ -1,4 +1,3 @@
-import { API_URL } from '@env'
 import axios from 'axios'
 import { useState } from 'react'
 
@@ -7,6 +6,9 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native'
 
 import { useNavigation } from '@react-navigation/native'
 import { CustonButton } from '../../components/CustonButton/CustonButton'
+import CustomInput from '../../components/CustomInput'
+import { API_ROUTES, getApiUrl } from '../../config/apiRoutes'
+import { withBusinessScope } from '../../config/businessConfig'
 import AlertMain from '../../utils/AlertMain'
 
 export const ConfirmPhoneScreen2 = () => {
@@ -22,15 +24,15 @@ export const ConfirmPhoneScreen2 = () => {
 
         const token = await AsyncStorage.getItem('Token')
 
-        const userData = {
+        const userData = withBusinessScope({
             token,
             validationCode
-        }
+        })
 
         axios
-            .post(`${API_URL}/api/firsrActivation`, userData)
+            .post(getApiUrl(API_ROUTES.firstActivation), userData)
             .then(response => {
-                if (response.data == 1) {
+                if (response.data === 1) {
                     setIsDisabled(false)
                     setTypeButton('Primary')
 
@@ -68,7 +70,7 @@ export const ConfirmPhoneScreen2 = () => {
             <View style={styles.root}>
                 <Text style={styles.title}>Check Your Phone and Enter Your Code</Text>
 
-                <CustomInput placeholder="Validation Code" value={validationCode} setValue={setValidationCode} />
+                <CustomInput placeHolder="Validation Code" value={validationCode} onChange={setValidationCode} />
 
                 <CustonButton text="Continue" onPress={onCodePressed} isDisabled={isDisabled} type={TypeButton} />
             </View>

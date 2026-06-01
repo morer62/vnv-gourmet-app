@@ -1,6 +1,7 @@
-import { API_URL } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { API_ROUTES, getApiUrl } from '../config/apiRoutes';
+import { withBusinessScope } from '../config/businessConfig';
 
 /**
  * @returns {Promise<{
@@ -23,9 +24,9 @@ export default async function getUserData() {
     const token = await AsyncStorage.getItem('Token');
     if (!token) return null;
 
-    const formBody = new URLSearchParams({ token }).toString();
+    const formBody = new URLSearchParams(withBusinessScope({ token })).toString();
 
-    const { data } = await axios.post(`${API_URL}api/auth/validate-token`, formBody, {
+    const { data } = await axios.post(getApiUrl(API_ROUTES.validateToken), formBody, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
       }

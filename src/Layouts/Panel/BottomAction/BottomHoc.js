@@ -3,7 +3,7 @@ import BottomAction from "./BottomActions"
 
 export default function BottomHoc(Component) {
 
-    return function () {
+    function BottomWrappedComponent() {
 
         return (
             <>
@@ -15,6 +15,10 @@ export default function BottomHoc(Component) {
             </>
         )
     }
+
+    BottomWrappedComponent.displayName = `BottomHoc(${Component.displayName || Component.name || 'Component'})`
+
+    return BottomWrappedComponent
 }
 
 const styles = StyleSheet.create({

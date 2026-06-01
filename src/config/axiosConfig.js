@@ -1,8 +1,5 @@
-// eslint-disable-next-line import/no-unresolved
-import { API_URL } from "@env";
-
 import axios from "axios";
 
-const BASE = API_URL?.endsWith('/') ? API_URL : `${API_URL}/`;
+import { BUSINESS_CONFIG } from "./businessConfig";
 
-axios.defaults.baseURL = BASE;
+axios.defaults.baseURL = BUSINESS_CONFIG.apiBaseUrl;

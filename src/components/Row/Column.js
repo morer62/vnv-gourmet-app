@@ -1,8 +1,7 @@
 import { View } from "react-native";
-import { ReactNode } from "react"
 /**
  * 
- * @param {{ children: ReactNode, size: number}} param0 
+ * @param {{ children: import("react").ReactNode, size: number}} param0 
  * @returns 
  */
 export default function Column({ children, size }) {

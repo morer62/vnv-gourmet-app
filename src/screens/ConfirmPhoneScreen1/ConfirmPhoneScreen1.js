@@ -1,17 +1,18 @@
 import { useEffect, useState } from 'react'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
 
-import { API_URL } from '@env'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useNavigation } from '@react-navigation/native'
 import axios from 'axios'
 
 import { CustonButton } from '../../components/CustonButton/CustonButton'
+import CustomInput from '../../components/CustomInput'
+import { API_ROUTES, getApiUrl } from '../../config/apiRoutes'
+import { withBusinessScope } from '../../config/businessConfig'
 import AlertMain from '../../utils/AlertMain'
 
 export const ConfirmPhoneScreen1 = () => {
     const navigation = useNavigation()
-    const ApiUrl = API_URL
     const [isDisabled, setIsDisabled] = useState()
     const [TypeButton, setTypeButton] = useState('Primary')
     const [phoneNumber, setPhoneNumber] = useState('')
@@ -22,11 +23,11 @@ export const ConfirmPhoneScreen1 = () => {
 
         async function load() {
             const token = await AsyncStorage.getItem('Token')
-            const payload = {
+            const payload = withBusinessScope({
                 token
-            }
+            })
 
-            const response = await axios.post(`${ApiUrl}/api/GetUserData`, payload)
+            const response = await axios.post(getApiUrl(API_ROUTES.getUserData), payload)
             let phone = response.data.phone
             phone = phone.replace('(', '').replace('+)', '').replace('+', '').replace(' ', '').replace('-', '')
 
@@ -47,10 +48,10 @@ export const ConfirmPhoneScreen1 = () => {
         setIsDisabled(true)
         setTypeButton('Disabled')
 
-        const payload = {
+        const payload = withBusinessScope({
             token: token,
             phoneNumber: phoneNumber
-        }
+        })
 
         const validation = new RegExp('^[0-9]*$')
 
@@ -59,7 +60,7 @@ export const ConfirmPhoneScreen1 = () => {
             return
         }
 
-        axios.post(`${ApiUrl}/api/getActivationSMS`, payload).then(res => {
+        axios.post(getApiUrl(API_ROUTES.activationSms), payload).then(() => {
             setIsDisabled(false)
             setTypeButton('Primary')
             navigation.navigate('ConfirmPhone2')
@@ -72,7 +73,7 @@ export const ConfirmPhoneScreen1 = () => {
             <View style={styles.root}>
                 <Text style={styles.title}>Confirm your Phone Number</Text>
 
-                <CustomInput placeholder="Phone Number" value={phoneNumber} setValue={setPhoneNumber} />
+                <CustomInput placeHolder="Phone Number" value={phoneNumber} onChange={setPhoneNumber} />
 
                 <CustonButton text="Send Code" onPress={onPhonePressed} isDisabled={isDisabled} type={TypeButton} />
             </View>

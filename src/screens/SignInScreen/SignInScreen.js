@@ -1,11 +1,8 @@
-// eslint-disable-next-line import/no-unresolved
-const API_URL = process.env.API_URL;
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import { useState } from 'react';
 import {
-  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -22,20 +19,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import Logo from '../../../assets/images/icon_login.png';
 import LoadingOverlay from '../../components/LoadingOverlay';
+import { API_ROUTES, getApiUrl } from '../../config/apiRoutes';
+import { BUSINESS_CONFIG, withBusinessScope } from '../../config/businessConfig';
 import { useUserContext } from '../../context/userContext';
 import AlertMain from '../../utils/AlertMain';
-
-// Importar GoogleSignin de forma condicional
-let GoogleSignin, isSuccessResponse;
-try {
-  const googleSignInModule = require('@react-native-google-signin/google-signin');
-  GoogleSignin = googleSignInModule.GoogleSignin;
-  isSuccessResponse = googleSignInModule.isSuccessResponse;
-} catch (error) {
-  console.warn('GoogleSignin no está disponible (probablemente estás usando Expo Go)');
-  GoogleSignin = null;
-  isSuccessResponse = null;
-}
 
 export const SignInScreen = () => {
   const { height, width } = useWindowDimensions();
@@ -45,37 +32,31 @@ export const SignInScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isDisabled, setIsDisabled] = useState(false);
-  const [isOnThirdPartySigninIn, setIsOnThridPartySignIn] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const BASE = API_URL?.trim()
-  ? (API_URL.endsWith('/') ? API_URL : `${API_URL}/`)
-  : '';
-const loginUrl = `${BASE}api/auth/login`;
+  const loginUrl = getApiUrl(API_ROUTES.login);
 
   const onSignInPressed = async () => {
+    if (!email.trim() || !password.trim()) {
+      AlertMain('Please enter your email and password.');
+      return;
+    }
+
     setIsDisabled(true);
 
     try {
-      const formBody = new URLSearchParams({
-        email,
+      const formBody = new URLSearchParams(withBusinessScope({
+        email: email.trim(),
         password,
         expo_token: '',
-      }).toString();
-
-      console.log('[LOGIN API_URL]', API_URL);
-      console.log('[LOGIN BASE]', BASE);
-      console.log('[LOGIN URL]', loginUrl);
-      console.log('[LOGIN EMAIL]', email);
+        source: 'avomeal_mobile_app',
+      })).toString();
 
       const res = await axios.post(loginUrl, formBody, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         timeout: 15000,
         validateStatus: () => true,
       });
-
-      console.log('[LOGIN STATUS]', res?.status);
-      console.log('[LOGIN RESPONSE]', res?.data);
 
       if (res.data?.success) {
         await AsyncStorage.setItem('Token', res.data.token);
@@ -90,152 +71,13 @@ const loginUrl = `${BASE}api/auth/login`;
       console.log('[LOGIN ERROR code]', error?.code);
       console.log('[LOGIN ERROR status]', error?.response?.status);
       console.log('[LOGIN ERROR response]', error?.response?.data);
-      console.log('[LOGIN ERROR API_URL]', API_URL);
-      console.log('[LOGIN ERROR BASE]', BASE);
       console.log('[LOGIN ERROR URL]', loginUrl);
 
-      AlertMain(`Connection error: ${error?.message || 'unknown error'}`);
+      AlertMain('Could not connect to the login service. Please try again.');
     } finally {
       setIsDisabled(false);
     }
   };
-
-  const handleGoogleBackendLogin = async (google_token) => {
-    try {
-      const res = await axios.post(
-        loginUrl,
-        new URLSearchParams({ google_token }).toString(),
-        {
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          timeout: 15000,
-          validateStatus: () => true,
-        }
-      );
-
-      console.log('[GOOGLE LOGIN STATUS]', res?.status);
-      console.log('[GOOGLE LOGIN RESPONSE]', res?.data);
-
-      await handleUserPostAuthentication(res);
-    } catch (error) {
-      console.log('[GOOGLE LOGIN ERROR message]', error?.message);
-      console.log('[GOOGLE LOGIN ERROR code]', error?.code);
-      console.log('[GOOGLE LOGIN ERROR status]', error?.response?.status);
-      console.log('[GOOGLE LOGIN ERROR response]', error?.response?.data);
-
-      if (error.response?.status === 404) {
-        onThridPartyNonAccount(google_token, 'GOOGLE');
-        return;
-      }
-
-      if (error.response?.data?.message) {
-        AlertMain(error.response.data.message);
-        return;
-      }
-
-      AlertMain('Could not sign in with google');
-    }
-  };
-
-  const handleIosToken = async (value) => {
-    try {
-      const payload = new URLSearchParams({
-        apple_credentials: value.identityToken
-      });
-
-      const response = await axios.post(loginUrl, payload.toString(), {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        timeout: 15000,
-        validateStatus: () => true,
-      });
-
-      console.log('[APPLE LOGIN STATUS]', response?.status);
-      console.log('[APPLE LOGIN RESPONSE]', response?.data);
-
-      await handleUserPostAuthentication(response);
-    } catch (error) {
-      console.log('[APPLE LOGIN ERROR message]', error?.message);
-      console.log('[APPLE LOGIN ERROR code]', error?.code);
-      console.log('[APPLE LOGIN ERROR status]', error?.response?.status);
-      console.log('[APPLE LOGIN ERROR response]', error?.response?.data);
-
-      if (error.response?.status === 404) {
-        onThridPartyNonAccount(value, 'IOS');
-        return;
-      }
-
-      if (error.response?.data?.message) {
-        AlertMain(error.response.data.message);
-        return;
-      }
-
-      AlertMain('Apple login error');
-    }
-  };
-
-  const onThridPartyNonAccount = (value, type) => {
-    Alert.alert('We could not find an existing account', 'Would you like to create one?', [
-      {
-        text: 'Cancel'
-      },
-      {
-        text: 'Create',
-        onPress: () => {
-          navigation.navigate('SignUpThirdParty', {
-            value,
-            type
-          });
-        }
-      }
-    ]);
-  };
-
-  const handleUserPostAuthentication = async (response) => {
-    if (response.data?.success) {
-      await AsyncStorage.setItem('Token', response.data.token);
-      await AsyncStorage.setItem('UserData', JSON.stringify(response.data.user));
-      setUserData(response.data.user);
-      navigation.navigate('panelNavigator', { screen: 'Panel' });
-    } else {
-      AlertMain(response.data?.message || 'login failed');
-    }
-  };
-
-  const onGooglePress = async () => {
-    if (!GoogleSignin) {
-      AlertMain('Google Sign-in no está disponible. Por favor, usa un development build.');
-      return;
-    }
-
-    try {
-      setIsOnThridPartySignIn(true);
-
-      await GoogleSignin.hasPlayServices();
-      await GoogleSignin.signOut();
-
-      const response = await GoogleSignin.signIn({
-        prompt: 'select_account',
-      });
-
-      if (isSuccessResponse && isSuccessResponse(response)) {
-        const { idToken } = response.data;
-        await handleGoogleBackendLogin(idToken);
-      }
-
-      setIsOnThridPartySignIn(false);
-    } catch (error) {
-      console.log('[GOOGLE PRESS ERROR]', error?.message);
-      setIsOnThridPartySignIn(false);
-    }
-  };
-
-  let googleButtonStyles = styles.googleButton;
-
-  if (Platform.OS === 'android') {
-    googleButtonStyles = {
-      ...styles.googleButton,
-      ...styles.googleButtonAndroid,
-    };
-  }
 
   const logoHeight = Math.min(height * 0.18, 130);
   const isSmallDevice = width < 390;
@@ -262,7 +104,7 @@ const loginUrl = `${BASE}api/auth/login`;
           <View style={styles.wrapper}>
             <View style={styles.heroBlock}>
               <View style={styles.badge}>
-                <Text style={styles.badgeText}>VNV Events</Text>
+                <Text style={styles.badgeText}>{BUSINESS_CONFIG.brandName}</Text>
               </View>
 
               <Image
@@ -276,7 +118,7 @@ const loginUrl = `${BASE}api/auth/login`;
               </Text>
 
               <Text style={styles.heroSubtitle}>
-                Sign in to access your panel, orders, clients, and everything you need in one beautiful place.
+                Sign in to manage your meals, orders, subscriptions, and account.
               </Text>
             </View>
 
@@ -288,27 +130,6 @@ const loginUrl = `${BASE}api/auth/login`;
               <Text style={styles.cardSubtitle}>
                 Continue with your email and password.
               </Text>
-
-              {/*
-              <View
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  flexDirection: 'row',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  gap: 10
-                }}
-              >
-                <TouchableOpacity
-                  style={googleButtonStyles}
-                  onPress={onGooglePress}
-                  activeOpacity={0.9}
-                >
-                  <Text style={styles.googleText}>Google</Text>
-                </TouchableOpacity>
-              </View>
-              */}
 
               <View style={styles.separator}>
                 <View style={styles.line} />
@@ -391,7 +212,7 @@ const loginUrl = `${BASE}api/auth/login`;
 
               <View style={styles.footerHint}>
                 <Text style={styles.footerHintText}>
-                  Secure access for your account and workspace
+                  Secure access for your {BUSINESS_CONFIG.brandName} account
                 </Text>
               </View>
             </View>
@@ -399,7 +220,7 @@ const loginUrl = `${BASE}api/auth/login`;
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <LoadingOverlay visible={isOnThirdPartySigninIn} />
+      <LoadingOverlay visible={isDisabled} />
     </SafeAreaView>
   );
 };
